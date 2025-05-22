@@ -126,7 +126,26 @@ class ChatMiddleware {
         }
         if (rawMessage === '#history') {
           const formerHistory = db.getSync(dbKey.history) ?? '[无聊天记录]'
+          if (formerHistory.trim() === '') {
+            send(textSegmentRequest('[无聊天记录]'))
+            return
+          }
           send(textSegmentRequest(formerHistory.split(/\n/).slice(-50).join('\n')))
+          return
+        }
+        if (rawMessage.startsWith('#delhistory')) {
+          const formerHistory = db.getSync(dbKey.history)
+          if (formerHistory === undefined) {
+            send(textSegmentRequest('没有聊天记录可供删除'))
+            return
+          }
+          const keywords = rawMessage.split(/\s/).slice(1).map(kw => `(${kw})`).join('|')
+          const regex = new RegExp(keywords)
+          const newHistory = formerHistory.split('\n')
+            .filter(line => !regex.test(line.replace(/^\(.*?\):\s*/g, '').trim()))
+            .join('\n')
+          await db.put(dbKey.history, newHistory)
+          send(textSegmentRequest(`已删去包含/${keywords}/的历史记录 ${newHistory}`))
           return
         }
       }
