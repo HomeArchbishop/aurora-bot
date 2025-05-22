@@ -66,7 +66,6 @@ const preset = new Preset({
     [/{{chinese_name}}/g, '法颂'],
     [/{{gender}}/g, '女'],
     [/{{pronoun}}/g, '她'],
-    [/{{time_now}}/g, `${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}(24小时制)`],
     [/{{master}}/g, `id=${Number(process.env.MASTER_ID)}`]
   ]
 })
@@ -84,6 +83,9 @@ export const fasongChatBot =
     .enableGroup(860946981, { rate: 1, replyOnAt: true }) // yanggu
     .enableGroup(718824969, { rate: 0.4, replyOnAt: true }) // 幼儿园
     .useHooks({
+      beforeCompletions: async (preset, history) => preset
+        .addReplaceOnce([/{{history_injection}}/g, history.split('\n').slice(-100).join('\n')])
+        .addReplaceOnce([/{{time_now}}/g, `${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}(24小时制)`]),
       beforeSend: async (replyString) => {
         const lines = replyString.split('\n')
         const splits: Array<string | Omit<ApiRequest, 'echo'>> = []
