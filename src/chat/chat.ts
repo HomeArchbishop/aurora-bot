@@ -158,6 +158,10 @@ class ChatMiddleware {
         }
         return acc
       }, []).join(' ').trim()
+      if (message.length === 0) {
+        if (this.#allowNext) { await next() }
+        return
+      }
       const formerHistory = db.getSync(dbKey.history) ?? ''
       const senderNickname = (isGroup ? event.sender.card : event.sender.nickname) ?? 'unknown'
       const appendHistoryPiece = `(others,nickname[${senderNickname}],id[${event.user_id}],msgid[${event.message_id}]): ${message}`
