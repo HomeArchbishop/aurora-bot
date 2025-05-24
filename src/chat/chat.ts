@@ -145,7 +145,7 @@ class ChatMiddleware {
             .filter(line => !regex.test(line.replace(/^\(.*?\):\s*/g, '').trim()))
             .join('\n')
           await db.put(dbKey.history, newHistory)
-          send(textSegmentRequest(`已删去包含/${keywords}/的历史记录 ${newHistory}`))
+          send(textSegmentRequest(`已删去包含/${keywords}/的历史记录 ${formerHistory.split('\n').length - newHistory.split('\n').length} 条`))
           return
         }
       }
@@ -164,7 +164,8 @@ class ChatMiddleware {
       }
       const formerHistory = db.getSync(dbKey.history) ?? ''
       const senderNickname = (isGroup ? event.sender.card : event.sender.nickname) ?? 'unknown'
-      const appendHistoryPiece = `(others,nickname[${senderNickname}],id[${event.user_id}],msgid[${event.message_id}]): ${message}`
+      const timenow = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+      const appendHistoryPiece = `(others,nickname[${senderNickname}],id[${event.user_id}],msgid[${event.message_id}],time[${timenow}]): ${message}`
       const appendedHistory = `${formerHistory}\n${appendHistoryPiece}`
       await db.put(dbKey.history, appendedHistory)
       // Check if ignore message this time
@@ -192,7 +193,7 @@ class ChatMiddleware {
         }
         // Save the reply to db
         const historyPieceText = await this.#hooks.historyPieceText(splits)
-        const newHistory = `${appendedHistory}\n(real_you,你,id[${event.self_id}],msgid[${event.message_id}]): ${historyPieceText}`
+        const newHistory = `${appendedHistory}\n(real_you,你,id[${event.self_id}],msgid[${event.message_id}],time[${timenow}]): ${historyPieceText}`
         await db.put(dbKey.history, newHistory)
       } catch (err: any) {
         send(textSegmentRequest('发生错误' + err.message))
