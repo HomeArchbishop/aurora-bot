@@ -12,6 +12,11 @@ interface ChatMiddlewareHooksRecord {
 interface EableGroupOptions { rate: number, replyOnAt: boolean }
 interface EablePrivateOptions { rate: number }
 
+enum ChatMode {
+  Normal,
+  SingleLineReply
+}
+
 class ChatMiddleware {
   constructor (id: string) {
     this.#id = id
@@ -22,12 +27,15 @@ class ChatMiddleware {
   readonly #enabled: Array<{ id: number, type: 'group' | 'private', rate: number, replyOnAt: boolean }> = []
   #allowNext: boolean = false
   #model?: string
+  #isShutup: number = -1
+
+  #mode: ChatMode = ChatMode.Normal
 
   readonly #masters = new Set<number>()
 
   readonly #hooks: ChatMiddlewareHooksRecord = {
     beforeCompletions: async (preset, history) =>
-      preset.addReplaceOnce([/{{history_injection}}/g, history.split('\n').slice(-100).join('\n')]),
+      preset.addReplaceOnce([/{{history_injection}}/g, history.split('\n').slice(-70).join('\n')]),
     beforeSend: async replyString =>
       replyString.split('\n').filter(split => split.trim().length > 0),
     historyPieceText: async splits =>
@@ -71,6 +79,11 @@ class ChatMiddleware {
     return this
   }
 
+  useChatMode (mode: ChatMode): this {
+    this.#mode = mode
+    return this
+  }
+
   async #completions (messages: Array<Record<'role' | 'content', string>>): Promise<string> {
     if (this.#model === undefined) {
       throw new Error('Model is not set')
@@ -98,6 +111,7 @@ class ChatMiddleware {
         await next()
         return
       }
+      const isBeenAt = event.message.find(seg => seg.type === 'at' && seg.data.qq === `${event.self_id}`) !== undefined
       const isGroup = event.message_type === 'group'
       const eventId = isGroup ? event.group_id : event.user_id
       const enableHit = this.#enabled.find(({ id, type }) => id === eventId && type === event.message_type)
@@ -106,7 +120,12 @@ class ChatMiddleware {
         return
       }
       const dbKey = {
-        history: `chatbot:${this.#id}:history:${event.message_type}_${eventId}`
+        history: `chatbot:${this.#id}:history:${event.message_type}_${eventId}`,
+        isShutup: `chatbot:${this.#id}:shutup:${event.message_type}_${eventId}`
+      }
+      if (this.#isShutup === -1) {
+        const isShutup = db.getSync(dbKey.isShutup)
+        this.#isShutup = isShutup === 'true' ? 1 : 0
       }
       // Define tool functions
       const textSegmentRequest = (msg: string): Omit<ApiRequest, 'echo'> => ({
@@ -145,7 +164,45 @@ class ChatMiddleware {
             .filter(line => !regex.test(line.replace(/^\(.*?\):\s*/g, '').trim()))
             .join('\n')
           await db.put(dbKey.history, newHistory)
-          send(textSegmentRequest(`已删去包含/${keywords}/的历史记录 ${formerHistory.split('\n').length - newHistory.split('\n').length} 条`))
+          const deletedCount =
+            formerHistory.split('\n').filter(line => line.trim().length !== 0).length -
+            newHistory.split('\n').filter(line => line.trim().length !== 0).length
+          send(textSegmentRequest(`已删去包含/${keywords}/的历史记录 ${deletedCount} 条`))
+          return
+        }
+        if (rawMessage.startsWith('#cnthistory')) {
+          const formerHistory = db.getSync(dbKey.history)
+          const keywords = rawMessage.split(/\s/).slice(1)
+          if (keywords.length === 0) {
+            const cnt = formerHistory?.split('\n').filter(line => line.trim().length !== 0).length ?? 0
+            send(textSegmentRequest(`当前聊天记录条数: ${cnt}`))
+            return
+          }
+          if (formerHistory === undefined) {
+            send(textSegmentRequest('没有聊天记录可供统计'))
+            return
+          }
+          const regexStr = keywords.map(kw => `(${kw})`).join('|')
+          const regex = new RegExp(regexStr)
+          const cnt = formerHistory.split('\n')
+            .filter(line => regex.test(line.replace(/^\(.*?\):\s*/g, '').trim()))
+            .length
+          send(textSegmentRequest(`查询到包含/${regexStr}/的历史记录 ${cnt} 条`))
+          return
+        }
+        if (rawMessage.startsWith('#shutup')) {
+          const arg = rawMessage.split(/\s/).slice(1)[0] ?? 'true'
+          if (arg === 'false' || arg === '0') {
+            await db.del(dbKey.isShutup)
+            this.#isShutup = 0
+            send(textSegmentRequest('已取消禁言'))
+            return
+          } else if (arg === 'true' || arg === '1') {
+            await db.put(dbKey.isShutup, 'true')
+            this.#isShutup = 1
+            send(textSegmentRequest('已禁言'))
+            return
+          }
           return
         }
       }
@@ -169,8 +226,7 @@ class ChatMiddleware {
       const appendedHistory = `${formerHistory}\n${appendHistoryPiece}`
       await db.put(dbKey.history, appendedHistory)
       // Check if ignore message this time
-      const isBeenAt = event.message.find(seg => seg.type === 'at' && seg.data.qq === `${event.self_id}`) !== undefined
-      if (!((enableHit.replyOnAt && isBeenAt) || (Math.random() < enableHit.rate))) {
+      if (this.#isShutup === 1 || !((enableHit.replyOnAt && isBeenAt) || (Math.random() < enableHit.rate))) {
         if (this.#allowNext) { await next() }
         return
       }
@@ -182,14 +238,19 @@ class ChatMiddleware {
           { role: 'user', content: appendHistoryPiece }
         ])
         const splits = await this.#hooks.beforeSend(replyString)
-        for (const split of splits) {
-          if (typeof split !== 'string') {
-            send(split)
-            continue
+        if (this.#mode === ChatMode.Normal) {
+          for (const split of splits) {
+            if (typeof split !== 'string') {
+              send(split)
+              continue
+            }
+            if (split.trim().length === 0) { continue }
+            send(textSegmentRequest(split))
+            await Bun.sleep(~~(Math.random() * 1000) + 500)
           }
-          if (split.trim().length === 0) { continue }
-          send(textSegmentRequest(split))
-          await Bun.sleep(~~(Math.random() * 1000) + 500)
+        } else if (this.#mode === ChatMode.SingleLineReply) {
+          send(textSegmentRequest(
+            `[CQ:reply,id=${event.message_id}][CQ:at,qq=${event.user_id}] ${splits.filter(split => typeof split === 'string').join('\n')}`))
         }
         // Save the reply to db
         const historyPieceText = await this.#hooks.historyPieceText(splits)
@@ -203,5 +264,6 @@ class ChatMiddleware {
 }
 
 export {
-  ChatMiddleware
+  ChatMiddleware,
+  ChatMode
 }

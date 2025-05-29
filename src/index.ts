@@ -11,6 +11,7 @@ import { emotion2image } from './middlewares/emotion2image'
 import { checkConn } from './middlewares/checkConn'
 import { fasongChatBot } from './middlewares/fasongChatBot'
 import { checkVersion } from './middlewares/checkVersion'
+import { fasong2ChatBot } from './middlewares/fasong2ChatBot'
 // import { accelerateGif } from './middlewares/accelerateGif'
 
 const app = new App({
@@ -38,6 +39,7 @@ app
 
   /* chat bot */
   .useMw(fasongChatBot)
+  .useMw(fasong2ChatBot)
 
 db.open()
   .then(() => { app.start() })
