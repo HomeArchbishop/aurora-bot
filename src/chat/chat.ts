@@ -28,12 +28,10 @@ class ChatMiddleware {
   #allowNext: boolean = false
   #model?: string
   #isShutup: number = -1
+  #chatMode: ChatMode = ChatMode.Normal
+  #masters = new Set<number>()
 
-  #mode: ChatMode = ChatMode.Normal
-
-  readonly #masters = new Set<number>()
-
-  readonly #hooks: ChatMiddlewareHooksRecord = {
+  #hooks: ChatMiddlewareHooksRecord = {
     beforeCompletions: async (preset, history) =>
       preset.addReplaceOnce([/{{history_injection}}/g, history.split('\n').slice(-70).join('\n')]),
     beforeSend: async replyString =>
@@ -80,9 +78,29 @@ class ChatMiddleware {
   }
 
   useChatMode (mode: ChatMode): this {
-    this.#mode = mode
+    this.#chatMode = mode
     return this
   }
+
+  fork (): ChatMiddleware
+  fork (handlers: Array<(mw: ChatMiddleware) => ChatMiddleware>): ChatMiddleware[]
+  fork (handlers?: Array<(mw: ChatMiddleware) => ChatMiddleware>): ChatMiddleware[] | ChatMiddleware {
+    const forkOnce = (i: number): ChatMiddleware => {
+      const newMw = new ChatMiddleware(`${this.#id}_fork_${i}`)
+      newMw.#preset = this.#preset.clone()
+      newMw.#model = this.#model
+      newMw.#enabled.push(...this.#enabled)
+      newMw.#allowNext = this.#allowNext
+      newMw.#isShutup = this.#isShutup
+      newMw.#chatMode = this.#chatMode
+      newMw.#masters = new Set(this.#masters)
+      newMw.#hooks = { ...this.#hooks }
+      return newMw
+    }
+    return handlers?.map((handler, i) => handler(forkOnce(i + 1))) ?? forkOnce(1)
+  }
+
+  get bubble (): this { return this }
 
   async #completions (messages: Array<Record<'role' | 'content', string>>): Promise<string> {
     if (this.#model === undefined) {
@@ -238,7 +256,7 @@ class ChatMiddleware {
           { role: 'user', content: appendHistoryPiece }
         ])
         const splits = await this.#hooks.beforeSend(replyString)
-        if (this.#mode === ChatMode.Normal) {
+        if (this.#chatMode === ChatMode.Normal) {
           for (const split of splits) {
             if (typeof split !== 'string') {
               send(split)
@@ -248,7 +266,7 @@ class ChatMiddleware {
             send(textSegmentRequest(split))
             await Bun.sleep(~~(Math.random() * 1000) + 500)
           }
-        } else if (this.#mode === ChatMode.SingleLineReply) {
+        } else if (this.#chatMode === ChatMode.SingleLineReply) {
           send(textSegmentRequest(
             `[CQ:reply,id=${event.message_id}][CQ:at,qq=${event.user_id}] ${splits.filter(split => typeof split === 'string').join('\n')}`))
         }

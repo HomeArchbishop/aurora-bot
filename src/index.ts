@@ -9,9 +9,9 @@ import { tiichermate } from './jobs/tiichermate'
 import { tiichermateController } from './middlewares/tiichermateController'
 import { emotion2image } from './middlewares/emotion2image'
 import { checkConn } from './middlewares/checkConn'
-import { fasongChatBot } from './middlewares/fasongChatBot'
+import { fasongChatBot, fasong2ChatBot } from './middlewares/fasongChatBot'
 import { checkVersion } from './middlewares/checkVersion'
-import { fasong2ChatBot } from './middlewares/fasong2ChatBot'
+// import { fasong2ChatBot } from './middlewares/fasong2ChatBot'
 // import { accelerateGif } from './middlewares/accelerateGif'
 
 const app = new App({
