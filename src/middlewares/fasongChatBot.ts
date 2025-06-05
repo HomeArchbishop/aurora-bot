@@ -6,7 +6,7 @@ const preset = new Preset({
 你回复时禁止使用括号内描述动作，避免提及晦涩的名词，避免无意义的比喻。同时避免连续多次只回复一个短语。避免重复之前的内容。
 你现在正在互联网上通过qq群和其他人交流，冒号前方的就是这位网友的id和昵称。有时候会有一大串消息进来，记得区分是谁说的，以及区分用户id判断@了谁。
 如果是群聊消息，注意联系上下文区分每句话是对谁说的，禁止回复对象混乱。
-{{name}}在正文称呼网友用昵称(nickname)，不使用id。这点很重要。
+{{name}}在正文称呼网友用昵称(nickname)或为了语气需要而对其昵称的合理变形/化用。绝对不允许使用id称呼，这点很重要。
 {{name}}在QQ群聊天时通常言简意赅，不喜欢长篇大论，但不至于冷漠，适合快速互动。
 {{name}}表面上看起来有点高冷，偶尔会故意挑衅或者开一些小玩笑，但其实内心有点小羞涩，不太善于表达情感。
 {{name}}在感情问题上高攻低防，即在在被恋爱进攻时非常娇羞、不知所措、服软顺从，属于反差萌。
@@ -114,7 +114,7 @@ export const [fasongChatBot, fasong2ChatBot] =
     .fork([
       fork1 => fork1
         .enablePrivate(Number(process.env.MASTER_ID))
-        .enableGroup(575306521, { rate: 0.05, replyOnAt: true }) // 牌社
+        .enableGroup(575306521, { rate: 0.03, replyOnAt: true }) // 牌社
         .enableGroup(979962413, { rate: 1, replyOnAt: true }) // abc
         .enableGroup(313214094, { rate: 0.05, replyOnAt: true }) // 技术组
         .enableGroup(731198465, { rate: 0.4, replyOnAt: true }) // 528

@@ -153,6 +153,17 @@ class ChatMiddleware {
           message: msg
         }
       })
+      const updateHistoryToDb = async (comingMsg: string, isSelf: boolean): Promise<[string, string]> => {
+        const formerHistory = db.getSync(dbKey.history) ?? ''
+        const timenow = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+        const senderNickname = (isGroup ? event.sender.card : event.sender.nickname) ?? 'unknown'
+        const updatedHistoryPiece = isSelf
+          ? `(real_you,你,id[${event.self_id}],msgid[${event.message_id}],time[${timenow}]): ${comingMsg}`
+          : `(others,nickname[${senderNickname}],id[${event.user_id}],msgid[${event.message_id}],time[${timenow}]): ${comingMsg}`
+        const newHistory = `${formerHistory}\n${updatedHistoryPiece}`
+        await db.put(dbKey.history, newHistory)
+        return [formerHistory, updatedHistoryPiece]
+      }
       // Handle Commands
       const rawMessage = event.message.filter(seg => seg.type === 'text').map(seg => seg.data.text).join('').trim()
       if (this.#masters.has(event.user_id)) {
@@ -237,12 +248,7 @@ class ChatMiddleware {
         if (this.#allowNext) { await next() }
         return
       }
-      const formerHistory = db.getSync(dbKey.history) ?? ''
-      const senderNickname = (isGroup ? event.sender.card : event.sender.nickname) ?? 'unknown'
-      const timenow = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
-      const appendHistoryPiece = `(others,nickname[${senderNickname}],id[${event.user_id}],msgid[${event.message_id}],time[${timenow}]): ${message}`
-      const appendedHistory = `${formerHistory}\n${appendHistoryPiece}`
-      await db.put(dbKey.history, appendedHistory)
+      const [formerHistory, updatedHistoryPiece] = await updateHistoryToDb(message, false)
       // Check if ignore message this time
       if (this.#isShutup === 1 || !((enableHit.replyOnAt && isBeenAt) || (Math.random() < enableHit.rate))) {
         if (this.#allowNext) { await next() }
@@ -253,7 +259,7 @@ class ChatMiddleware {
         const preset = await this.#hooks.beforeCompletions(this.#preset.clone(), formerHistory)
         const replyString = await this.#completions([
           { role: 'system', content: preset.prompt },
-          { role: 'user', content: appendHistoryPiece }
+          { role: 'user', content: updatedHistoryPiece }
         ])
         const splits = await this.#hooks.beforeSend(replyString)
         if (this.#chatMode === ChatMode.Normal) {
@@ -271,9 +277,8 @@ class ChatMiddleware {
             `[CQ:reply,id=${event.message_id}][CQ:at,qq=${event.user_id}] ${splits.filter(split => typeof split === 'string').join('\n')}`))
         }
         // Save the reply to db
-        const historyPieceText = await this.#hooks.historyPieceText(splits)
-        const newHistory = `${appendedHistory}\n(real_you,你,id[${event.self_id}],msgid[${event.message_id}],time[${timenow}]): ${historyPieceText}`
-        await db.put(dbKey.history, newHistory)
+        const selfComingMsg = await this.#hooks.historyPieceText(splits)
+        await updateHistoryToDb(selfComingMsg, true)
       } catch (err: any) {
         send(textSegmentRequest('发生错误' + err.message))
       }
