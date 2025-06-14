@@ -120,6 +120,7 @@ export const [fasongChatBot, fasong2ChatBot] =
         .enableGroup(731198465, { rate: 0.4, replyOnAt: true }) // 528
         .enableGroup(860946981, { rate: 1, replyOnAt: true }) // yanggu
         .enableGroup(718824969, { rate: 0.4, replyOnAt: true }) // 幼儿园
+        .enableGroup(959606149, { rate: 0.2, replyOnAt: true }) // 努力学习
         .bubble,
       fork2 => fork2
         .useChatMode(ChatMode.SingleLineReply)
