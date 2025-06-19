@@ -3,12 +3,6 @@ import { createMiddleware, type Middleware } from '../app'
 import { Preset } from './preset'
 import { type ApiRequest } from '../types/api'
 
-interface ChatMiddlewareHooksRecord {
-  beforeCompletions: (preset: Preset, history: string) => Promise<Preset>
-  beforeSend: (replyString: string) => Promise<Array<string | Omit<ApiRequest, 'echo'>>>
-  historyPieceText: (splits: Array<string | Omit<ApiRequest, 'echo'>>) => Promise<string>
-}
-
 interface EableGroupOptions { rate: number, replyOnAt: boolean }
 interface EablePrivateOptions { rate: number }
 
@@ -16,6 +10,10 @@ enum ChatMode {
   Normal,
   SingleLineReply
 }
+
+type ReplyRequestSplits = string | Omit<ApiRequest, 'echo'>
+type PresetPreprocessorFn = (preset: Preset) => Promise<void>
+type ReplyProcessorFn = (splits: ReplyRequestSplits[]) => Promise<ReplyRequestSplits[]>
 
 class ChatMiddleware {
   constructor (id: string) {
@@ -31,29 +29,32 @@ class ChatMiddleware {
   #chatMode: ChatMode = ChatMode.Normal
   #masters = new Set<number>()
 
-  #hooks: ChatMiddlewareHooksRecord = {
-    beforeCompletions: async (preset, history) =>
-      preset.addReplaceOnce([/{{history_injection}}/g, history.split('\n').slice(-70).join('\n')]),
-    beforeSend: async replyString =>
-      replyString.split('\n').filter(split => split.trim().length > 0),
-    historyPieceText: async splits =>
-      splits.filter(split => typeof split === 'string').join(' ')
-  }
+  #presetHistoryInjectionCount: number = 70
+  readonly #presetPreprocessors: PresetPreprocessorFn[] = []
+  readonly #replyProcessors: ReplyProcessorFn[] = []
 
   usePreset (preset: Preset): this {
     this.#preset = preset.clone()
     return this
   }
 
-  useModel (model: string): this {
-    this.#model = model
+  setPresetHistoryInjectionCount (cnt: number): this {
+    this.#presetHistoryInjectionCount = cnt
     return this
   }
 
-  useHooks (hook: Partial<ChatMiddlewareHooksRecord>): this {
-    this.#hooks.beforeCompletions = hook.beforeCompletions ?? this.#hooks.beforeCompletions
-    this.#hooks.beforeSend = hook.beforeSend ?? this.#hooks.beforeSend
-    this.#hooks.historyPieceText = hook.historyPieceText ?? this.#hooks.historyPieceText
+  addPresetPreprocessor (fn: PresetPreprocessorFn): this {
+    this.#presetPreprocessors.push(fn)
+    return this
+  }
+
+  addReplyProcessor (fn: ReplyProcessorFn): this {
+    this.#replyProcessors.push(fn)
+    return this
+  }
+
+  useModel (model: string): this {
+    this.#model = model
     return this
   }
 
@@ -94,7 +95,9 @@ class ChatMiddleware {
       newMw.#isShutup = this.#isShutup
       newMw.#chatMode = this.#chatMode
       newMw.#masters = new Set(this.#masters)
-      newMw.#hooks = { ...this.#hooks }
+      newMw.#presetHistoryInjectionCount = this.#presetHistoryInjectionCount
+      newMw.#presetPreprocessors.push(...this.#presetPreprocessors)
+      newMw.#replyProcessors.push(...this.#replyProcessors)
       return newMw
     }
     return handlers?.map((handler, i) => handler(forkOnce(i + 1))) ?? forkOnce(1)
@@ -146,11 +149,11 @@ class ChatMiddleware {
         this.#isShutup = isShutup === 'true' ? 1 : 0
       }
       // Define tool functions
-      const textSegmentRequest = (msg: string): Omit<ApiRequest, 'echo'> => ({
+      const textSegmentRequest = (str: string): Omit<ApiRequest, 'echo'> => ({
         action: event.message_type === 'group' ? 'send_group_msg' : 'send_private_msg',
         params: {
           [event.message_type === 'group' ? 'group_id' : 'user_id']: eventId,
-          message: msg
+          message: str
         }
       })
       const updateHistoryToDb = async (comingMsg: string, isSelf: boolean): Promise<[string, string]> => {
@@ -256,28 +259,41 @@ class ChatMiddleware {
       }
       // Not ignore, then handle the message
       try {
-        const preset = await this.#hooks.beforeCompletions(this.#preset.clone(), formerHistory)
+        const preset = this.#preset.clone()
+        preset.addReplaceOnce([/{{history_injection}}/g,
+          formerHistory.split('\n').slice(-this.#presetHistoryInjectionCount).join('\n')])
+        for (const preprocessor of this.#presetPreprocessors) {
+          await preprocessor(preset)
+        }
         const replyString = await this.#completions([
           { role: 'system', content: preset.prompt },
           { role: 'user', content: updatedHistoryPiece }
         ])
-        const splits = await this.#hooks.beforeSend(replyString)
+        const splits = await this.#replyProcessors.reduce<Promise<ReplyRequestSplits[]>>(
+          async (acc, processor) => await acc.then(async res => await processor(res)),
+          Promise.resolve(replyString.split('\n').map(l => l.trim()).filter(l => l.length > 0))
+        )
+          .then(res => res.map(split =>
+            typeof split === 'string' ? split.split('\n').map(l => l.trim()).filter(l => l.length > 0) : split))
+          .then(res => res.flat())
         if (this.#chatMode === ChatMode.Normal) {
           for (const split of splits) {
+            // split is NEVER an empty string
+            const sleepTime = ~~(Math.random() * 1000) + 500
             if (typeof split !== 'string') {
               send(split)
+              await Bun.sleep(sleepTime)
               continue
             }
-            if (split.trim().length === 0) { continue }
             send(textSegmentRequest(split))
-            await Bun.sleep(~~(Math.random() * 1000) + 500)
+            await Bun.sleep(sleepTime)
           }
         } else if (this.#chatMode === ChatMode.SingleLineReply) {
           send(textSegmentRequest(
             `[CQ:reply,id=${event.message_id}][CQ:at,qq=${event.user_id}] ${splits.filter(split => typeof split === 'string').join('\n')}`))
         }
         // Save the reply to db
-        const selfComingMsg = await this.#hooks.historyPieceText(splits)
+        const selfComingMsg = splits.filter(split => typeof split === 'string').join(' ')
         await updateHistoryToDb(selfComingMsg, true)
       } catch (err: any) {
         send(textSegmentRequest('发生错误' + err.message))
