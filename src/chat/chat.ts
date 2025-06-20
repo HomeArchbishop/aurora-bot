@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { createMiddleware, type Middleware } from '../app'
+import { createMiddleware, type MiddlewareCtx, type Middleware } from '../app'
 import { Preset } from './preset'
 import { type ApiRequest } from '../types/api'
 
@@ -15,6 +15,20 @@ type ReplyRequestSplits = string | Omit<ApiRequest, 'echo'>
 type PresetPreprocessorFn = (preset: Preset) => Promise<void>
 type ReplyProcessorFn = (splits: ReplyRequestSplits[]) => Promise<ReplyRequestSplits[]>
 
+interface DBKey {
+  history: string
+  isShutup: string
+}
+
+interface CommandCallbackCtx extends MiddlewareCtx {
+  dbKey: DBKey
+  textSegmentRequest: (str: string) => Omit<ApiRequest, 'echo'>
+}
+type CommandCallback = (ctx: CommandCallbackCtx, args: string[]) => Promise<void>
+interface CommandOptions {
+  permission: 'master' | 'everyone' | number[]
+}
+
 class ChatMiddleware {
   constructor (id: string) {
     this.#id = id
@@ -25,7 +39,6 @@ class ChatMiddleware {
   readonly #enabled: Array<{ id: number, type: 'group' | 'private', rate: number, replyOnAt: boolean }> = []
   #allowNext: boolean = false
   #model?: string
-  #isShutup: number = -1
   #chatMode: ChatMode = ChatMode.Normal
   #masters = new Set<number>()
 
@@ -33,23 +46,10 @@ class ChatMiddleware {
   readonly #presetPreprocessors: PresetPreprocessorFn[] = []
   readonly #replyProcessors: ReplyProcessorFn[] = []
 
+  readonly #commands: Array<{ command: RegExp, permission: CommandOptions['permission'], callback: CommandCallback }> = []
+
   usePreset (preset: Preset): this {
     this.#preset = preset.clone()
-    return this
-  }
-
-  setPresetHistoryInjectionCount (cnt: number): this {
-    this.#presetHistoryInjectionCount = cnt
-    return this
-  }
-
-  addPresetPreprocessor (fn: PresetPreprocessorFn): this {
-    this.#presetPreprocessors.push(fn)
-    return this
-  }
-
-  addReplyProcessor (fn: ReplyProcessorFn): this {
-    this.#replyProcessors.push(fn)
     return this
   }
 
@@ -83,6 +83,32 @@ class ChatMiddleware {
     return this
   }
 
+  setPresetHistoryInjectionCount (cnt: number): this {
+    this.#presetHistoryInjectionCount = cnt
+    return this
+  }
+
+  addPresetPreprocessor (fn: PresetPreprocessorFn): this {
+    this.#presetPreprocessors.push(fn)
+    return this
+  }
+
+  addReplyProcessor (fn: ReplyProcessorFn): this {
+    this.#replyProcessors.push(fn)
+    return this
+  }
+
+  addCommand (command: string | RegExp, cb: CommandCallback, options: CommandOptions): this {
+    this.#commands.push({
+      command: typeof command === 'string'
+        ? new RegExp(`^${command.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:$|\\s)`)
+        : command,
+      permission: options.permission,
+      callback: cb
+    })
+    return this
+  }
+
   fork (): ChatMiddleware
   fork (handlers: Array<(mw: ChatMiddleware) => ChatMiddleware>): ChatMiddleware[]
   fork (handlers?: Array<(mw: ChatMiddleware) => ChatMiddleware>): ChatMiddleware[] | ChatMiddleware {
@@ -92,12 +118,12 @@ class ChatMiddleware {
       newMw.#model = this.#model
       newMw.#enabled.push(...this.#enabled)
       newMw.#allowNext = this.#allowNext
-      newMw.#isShutup = this.#isShutup
       newMw.#chatMode = this.#chatMode
       newMw.#masters = new Set(this.#masters)
       newMw.#presetHistoryInjectionCount = this.#presetHistoryInjectionCount
       newMw.#presetPreprocessors.push(...this.#presetPreprocessors)
       newMw.#replyProcessors.push(...this.#replyProcessors)
+      newMw.#commands.push(...this.#commands)
       return newMw
     }
     return handlers?.map((handler, i) => handler(forkOnce(i + 1))) ?? forkOnce(1)
@@ -127,12 +153,14 @@ class ChatMiddleware {
   }
 
   get mw (): Middleware {
-    return createMiddleware(async ({ event, db, send }, next) => {
+    return createMiddleware(async (mwCtx, next) => {
+      const { event, db, send } = mwCtx
       if (event.post_type !== 'message') {
         await next()
         return
       }
       const isBeenAt = event.message.find(seg => seg.type === 'at' && seg.data.qq === `${event.self_id}`) !== undefined
+      const isFromMaster = this.#masters.has(event.user_id)
       const isGroup = event.message_type === 'group'
       const eventId = isGroup ? event.group_id : event.user_id
       const enableHit = this.#enabled.find(({ id, type }) => id === eventId && type === event.message_type)
@@ -140,14 +168,11 @@ class ChatMiddleware {
         await next()
         return
       }
-      const dbKey = {
+      const dbKey: DBKey = {
         history: `chatbot:${this.#id}:history:${event.message_type}_${eventId}`,
         isShutup: `chatbot:${this.#id}:shutup:${event.message_type}_${eventId}`
       }
-      if (this.#isShutup === -1) {
-        const isShutup = db.getSync(dbKey.isShutup)
-        this.#isShutup = isShutup === 'true' ? 1 : 0
-      }
+      const isShutup = db.getSync(dbKey.isShutup) === 'true'
       // Define tool functions
       const textSegmentRequest = (str: string): Omit<ApiRequest, 'echo'> => ({
         action: event.message_type === 'group' ? 'send_group_msg' : 'send_private_msg',
@@ -169,74 +194,23 @@ class ChatMiddleware {
       }
       // Handle Commands
       const rawMessage = event.message.filter(seg => seg.type === 'text').map(seg => seg.data.text).join('').trim()
-      if (this.#masters.has(event.user_id)) {
-        if (rawMessage === '#clearhistory') {
-          await db.del(dbKey.history)
-          send(textSegmentRequest('已清除历史记录'))
+      for (const cmd of this.#commands) {
+        if (!cmd.command.test(rawMessage)) { continue }
+        if (cmd.permission === 'master' && !isFromMaster) {
+          send(textSegmentRequest('没有权限执行该命令'))
+          return
+        } else if (Array.isArray(cmd.permission) && !cmd.permission.includes(event.user_id) && !isFromMaster) {
+          send(textSegmentRequest('没有权限执行该命令'))
           return
         }
-        if (rawMessage === '#history') {
-          const formerHistory = db.getSync(dbKey.history) ?? '[无聊天记录]'
-          if (formerHistory.trim() === '') {
-            send(textSegmentRequest('[无聊天记录]'))
-            return
-          }
-          send(textSegmentRequest(formerHistory.split(/\n/).slice(-50).join('\n')))
-          return
+        const ctx: CommandCallbackCtx = {
+          ...mwCtx,
+          dbKey,
+          textSegmentRequest
         }
-        if (rawMessage.startsWith('#delhistory')) {
-          const formerHistory = db.getSync(dbKey.history)
-          if (formerHistory === undefined) {
-            send(textSegmentRequest('没有聊天记录可供删除'))
-            return
-          }
-          const keywords = rawMessage.split(/\s/).slice(1).map(kw => `(${kw})`).join('|')
-          const regex = new RegExp(keywords)
-          const newHistory = formerHistory.split('\n')
-            .filter(line => !regex.test(line.replace(/^\(.*?\):\s*/g, '').trim()))
-            .join('\n')
-          await db.put(dbKey.history, newHistory)
-          const deletedCount =
-            formerHistory.split('\n').filter(line => line.trim().length !== 0).length -
-            newHistory.split('\n').filter(line => line.trim().length !== 0).length
-          send(textSegmentRequest(`已删去包含/${keywords}/的历史记录 ${deletedCount} 条`))
-          return
-        }
-        if (rawMessage.startsWith('#cnthistory')) {
-          const formerHistory = db.getSync(dbKey.history)
-          const keywords = rawMessage.split(/\s/).slice(1)
-          if (keywords.length === 0) {
-            const cnt = formerHistory?.split('\n').filter(line => line.trim().length !== 0).length ?? 0
-            send(textSegmentRequest(`当前聊天记录条数: ${cnt}`))
-            return
-          }
-          if (formerHistory === undefined) {
-            send(textSegmentRequest('没有聊天记录可供统计'))
-            return
-          }
-          const regexStr = keywords.map(kw => `(${kw})`).join('|')
-          const regex = new RegExp(regexStr)
-          const cnt = formerHistory.split('\n')
-            .filter(line => regex.test(line.replace(/^\(.*?\):\s*/g, '').trim()))
-            .length
-          send(textSegmentRequest(`查询到包含/${regexStr}/的历史记录 ${cnt} 条`))
-          return
-        }
-        if (rawMessage.startsWith('#shutup')) {
-          const arg = rawMessage.split(/\s/).slice(1)[0] ?? 'true'
-          if (arg === 'false' || arg === '0') {
-            await db.del(dbKey.isShutup)
-            this.#isShutup = 0
-            send(textSegmentRequest('已取消禁言'))
-            return
-          } else if (arg === 'true' || arg === '1') {
-            await db.put(dbKey.isShutup, 'true')
-            this.#isShutup = 1
-            send(textSegmentRequest('已禁言'))
-            return
-          }
-          return
-        }
+        const args = rawMessage.split(/\s/).slice(1)
+        await cmd.callback.call(this, ctx, args)
+        return
       }
       // Save the coming message to db
       const message = event.message.reduce<string[]>((acc, seg) => {
@@ -253,7 +227,7 @@ class ChatMiddleware {
       }
       const [formerHistory, updatedHistoryPiece] = await updateHistoryToDb(message, false)
       // Check if ignore message this time
-      if (this.#isShutup === 1 || !((enableHit.replyOnAt && isBeenAt) || (Math.random() < enableHit.rate))) {
+      if (isShutup || !((enableHit.replyOnAt && isBeenAt) || (Math.random() < enableHit.rate))) {
         if (this.#allowNext) { await next() }
         return
       }

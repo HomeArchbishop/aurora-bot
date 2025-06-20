@@ -125,4 +125,4 @@ function createMiddleware (mw: Middleware): Middleware {
 
 export default App
 export { createMiddleware }
-export type { Middleware, Job }
+export type { Middleware, Job, MiddlewareCtx }
