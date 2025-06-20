@@ -103,7 +103,7 @@ export const [fasongChatBot, fasong2ChatBot] =
       return processedSplits
     })
 
-    .addCommand('#clearhistory',
+    .addCommand(['#clearhistory', '#clrhistory'],
       async ({ send, db, dbKey, textSegmentRequest }) => {
         await db.del(dbKey.history)
         send(textSegmentRequest('已清除历史记录'))
@@ -162,18 +162,18 @@ export const [fasongChatBot, fasong2ChatBot] =
       },
       { permission: 'everyone' }
     )
-    .addCommand('#shutup',
+    .addCommand(['#shutup', '#ballgag'],
       async ({ send, db, dbKey, textSegmentRequest }, args) => {
         const arg = args[0] ?? 'true'
-        if (arg === 'false' || arg === '0') {
+        if (arg === 'false' || arg === '0' || arg === 'off' || arg === '脱ぐ') {
           await db.del(dbKey.isShutup)
           send(textSegmentRequest('已取消禁言'))
-        } else if (arg === 'true' || arg === '1') {
+        } else if (arg === 'true' || arg === '1' || arg === 'on' || arg === '着る') {
           await db.put(dbKey.isShutup, 'true')
           send(textSegmentRequest('已禁言'))
         }
       },
-      { permission: 'master' }
+      { permission: 'everyone' }
     )
 
     .fork([

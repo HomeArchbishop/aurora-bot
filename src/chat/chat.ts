@@ -46,7 +46,7 @@ class ChatMiddleware {
   readonly #presetPreprocessors: PresetPreprocessorFn[] = []
   readonly #replyProcessors: ReplyProcessorFn[] = []
 
-  readonly #commands: Array<{ command: RegExp, permission: CommandOptions['permission'], callback: CommandCallback }> = []
+  readonly #commands: Array<{ command: RegExp[], permission: CommandOptions['permission'], callback: CommandCallback }> = []
 
   usePreset (preset: Preset): this {
     this.#preset = preset.clone()
@@ -98,11 +98,14 @@ class ChatMiddleware {
     return this
   }
 
-  addCommand (command: string | RegExp, cb: CommandCallback, options: CommandOptions): this {
+  addCommand (command: string | RegExp | Array<string | RegExp>, cb: CommandCallback, options: CommandOptions): this {
     this.#commands.push({
-      command: typeof command === 'string'
-        ? new RegExp(`^${command.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:$|\\s)`)
-        : command,
+      command: (Array.isArray(command) ? command : [command]).map(cmd => {
+        if (typeof cmd === 'string') {
+          return new RegExp(`^${cmd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:$|\\s)`)
+        }
+        return cmd
+      }),
       permission: options.permission,
       callback: cb
     })
@@ -195,7 +198,7 @@ class ChatMiddleware {
       // Handle Commands
       const rawMessage = event.message.filter(seg => seg.type === 'text').map(seg => seg.data.text).join('').trim()
       for (const cmd of this.#commands) {
-        if (!cmd.command.test(rawMessage)) { continue }
+        if (!cmd.command.some(reg => reg.test(rawMessage))) { continue }
         if (cmd.permission === 'master' && !isFromMaster) {
           send(textSegmentRequest('没有权限执行该命令'))
           return
