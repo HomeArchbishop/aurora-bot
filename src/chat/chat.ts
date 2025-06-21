@@ -139,11 +139,11 @@ class ChatMiddleware {
       throw new Error('Model is not set')
     }
     const resp = await axios.request({
-      url: process.env.POLO_API_HOST + '/v1/chat/completions',
+      url: process.env.LLM_API_HOST + '/v1/chat/completions',
       method: 'POST',
       headers: {
         Accept: 'application/json',
-        Authorization: `Bearer ${process.env.POLO_API_KEY}`,
+        Authorization: `Bearer ${process.env.LLM_API_KEY}`,
         'User-Agent': 'PoloAPI/1.0.0 (https://poloai.top)',
         'Content-Type': 'application/json'
       },
