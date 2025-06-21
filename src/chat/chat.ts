@@ -29,6 +29,8 @@ interface CommandOptions {
   permission: 'master' | 'everyone' | number[]
 }
 
+type ChatMiddlewareForkedArray = ChatMiddleware[] & { buildAll: () => Middleware[] }
+
 class ChatMiddleware {
   constructor (id: string) {
     this.#id = id
@@ -113,8 +115,8 @@ class ChatMiddleware {
   }
 
   fork (): ChatMiddleware
-  fork (handlers: Array<(mw: ChatMiddleware) => ChatMiddleware>): ChatMiddleware[]
-  fork (handlers?: Array<(mw: ChatMiddleware) => ChatMiddleware>): ChatMiddleware[] | ChatMiddleware {
+  fork (handlers: Array<(mw: ChatMiddleware) => ChatMiddleware>): ChatMiddlewareForkedArray
+  fork (handlers?: Array<(mw: ChatMiddleware) => ChatMiddleware>): ChatMiddlewareForkedArray | ChatMiddleware {
     const forkOnce = (i: number): ChatMiddleware => {
       const newMw = new ChatMiddleware(`${this.#id}_fork_${i}`)
       newMw.#preset = this.#preset.clone()
@@ -129,7 +131,19 @@ class ChatMiddleware {
       newMw.#commands.push(...this.#commands)
       return newMw
     }
-    return handlers?.map((handler, i) => handler(forkOnce(i + 1))) ?? forkOnce(1)
+    if (handlers === undefined) {
+      return forkOnce(1)
+    }
+    const arr = handlers.map((handler, i) => handler(forkOnce(i + 1)))
+    Object.defineProperty(arr, 'buildAll', {
+      value: function () {
+        return this.map((mw: ChatMiddleware) => mw.build())
+      },
+      writable: false,
+      enumerable: false,
+      configurable: true
+    })
+    return arr as ChatMiddlewareForkedArray
   }
 
   get bubble (): this { return this }
@@ -276,6 +290,10 @@ class ChatMiddleware {
         send(textSegmentRequest('发生错误' + err.message))
       }
     })
+  }
+
+  build (): Middleware {
+    return this.mw
   }
 }
 
