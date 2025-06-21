@@ -70,7 +70,7 @@ const preset = new Preset({
   ]
 })
 
-export const [fasongChatBot, fasong2ChatBot] =
+export const [{ mw: fasongChatBot }, { mw: fasong2ChatBot }] =
   new ChatMiddleware('fasongChatBot')
     .usePreset(preset)
     .useModel('deepseek-chat')
@@ -191,4 +191,4 @@ export const [fasongChatBot, fasong2ChatBot] =
         .enableGroup(1051443446, { rate: 0.02, replyOnAt: true }) // 家园&冰岩
         .bubble
     ])
-    .map(({ mw }) => mw)
+    // .map(({ mw }) => mw)
