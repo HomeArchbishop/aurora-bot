@@ -11,6 +11,7 @@ import { emotion2image } from './middlewares/emotion2image'
 import { checkConn } from './middlewares/checkConn'
 import { fasongChatBot, fasong2ChatBot } from './middlewares/fasongChatBot'
 import { checkVersion } from './middlewares/checkVersion'
+// import { onlyEchoMeAndSendID } from './middlewares/onlyEchoMeAndSendID'
 // import { fasong2ChatBot } from './middlewares/fasong2ChatBot'
 // import { accelerateGif } from './middlewares/accelerateGif'
 
@@ -28,6 +29,7 @@ app
 
   /* applications */
   .useMw(emotion2image)
+  // .useMw(onlyEchoMeAndSendID)
   // .useMw(onlyEchoMe)
   // .useMw(accelerateGif)
   // .useMw(forwardEveryEmotion)

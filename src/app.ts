@@ -1,11 +1,12 @@
 import { scheduleJob } from 'node-schedule'
 import type winston from 'winston'
 import WebSocket from 'ws'
-import type { ApiRequest } from './types/api'
-import type { Event } from './types/event'
+import type { ApiRequest, ApiActionName } from './types/req'
+import type { WsEvent } from './types/event'
 import path from 'path'
 import { existsSync, mkdirSync } from 'fs'
 import { type Level } from 'level'
+import type { ApiResponseStatus, ApiResponse } from './types/res'
 
 interface AppOptions {
   url: string
@@ -13,8 +14,17 @@ interface AppOptions {
   db: Level<string, string>
 }
 
-type CtxSend = (data: Omit<ApiRequest, 'echo'>) => string
-interface MiddlewareCtx { event: Event, send: CtxSend, tempdir: string, db: Level<string, string> }
+type ApiResCallback<
+  S extends ApiResponseStatus = ApiResponseStatus, T extends ApiActionName = ApiActionName
+> = (res: Omit<ApiResponse<S, T>, 'echo'>) => void
+
+type CtxSend = <T extends ApiActionName>(
+  req: Omit<ApiRequest<T>, 'echo'>,
+  okCb?: ApiResCallback<ApiResponseStatus.OK, T>,
+  failedCb?: ApiResCallback<ApiResponseStatus.FAILED, T>
+) => void
+
+interface MiddlewareCtx { event: WsEvent, send: CtxSend, tempdir: string, db: Level<string, string> }
 interface JobCtx { send: CtxSend, tempdir: string, db: Level<string, string> }
 type Middleware = (ctx: MiddlewareCtx, next: () => Promise<void>) => Promise<void>
 type Job = (ctx: JobCtx) => Promise<void>
@@ -31,15 +41,15 @@ class App {
       mkdirSync(this.#tempdir, { recursive: true })
     }
 
-    this.#ctxSend = (...[data]: Parameters<CtxSend>) => {
+    this.#ctxSend = (req, resOkCb, resfailedCb) => {
       const hash = Math.random().toString(36).slice(2, 10)
-      const echoData = { ...data, echo: hash }
-      const raw = JSON.stringify(echoData)
+      const echoReq = { ...req, echo: hash }
+      const raw = JSON.stringify(echoReq)
+      this.#apiResCallbacks.set(hash, [resOkCb as ApiResCallback<ApiResponseStatus.OK>, resfailedCb as ApiResCallback<ApiResponseStatus.FAILED>])
       this.#logger.debug(`ws sending with echo:${hash}: ` + raw)
-      this.#logger.silly(`ws sending with echo:${hash}: ` + JSON.stringify(echoData, null, 2))
+      this.#logger.silly(`ws sending with echo:${hash}: ` + JSON.stringify(echoReq, null, 2))
       this.#ws.send.bind(this.#ws)(raw)
       this.#logger.debug(`ws sent with echo:${hash}`)
-      return hash
     }
   }
 
@@ -50,6 +60,9 @@ class App {
   readonly #middlewares: Middleware[] = [
     async (_, next) => { await next() }
   ]
+
+  readonly #apiResCallbacks =
+    new Map<string, [ApiResCallback<ApiResponseStatus.OK>?, ApiResCallback<ApiResponseStatus.FAILED>?]>()
 
   readonly #ctxSend: CtxSend
   readonly #tempdir = path.resolve(__dirname, '../temp')
@@ -93,8 +106,24 @@ class App {
       const hash = Math.random().toString(36).slice(2, 10)
       const raw = String(wsMsgEvent.data) // WebSocketMessageEvent.data is a BufferSource
       this.#logger.debug(`ws received ws_msg#${hash}: ` + raw)
-      const event = JSON.parse(raw)
-      this.#logger.silly(`parsed ws_msg#${hash}: ` + JSON.stringify(event, null, 2))
+      const parsed = JSON.parse(raw) as WsEvent | ApiResponse
+      this.#logger.silly(`parsed ws_msg#${hash}: ` + JSON.stringify(parsed, null, 2))
+      if (Object.prototype.hasOwnProperty.call(parsed, 'status')) {
+        // Is an ApiResponse
+        this.#logger.debug(`ws_msg#${hash} is an ApiResponse, calling callback (if any)`)
+        const res = parsed as ApiResponse
+        const [okCb, failedCb] = this.#apiResCallbacks.get(res.echo) ?? []
+        this.#apiResCallbacks.delete(res.echo)
+        if (okCb !== undefined && res.status === 'ok') {
+          okCb(res as ApiResponse<ApiResponseStatus.OK>)
+        }
+        if (failedCb !== undefined && res.status === 'failed') {
+          failedCb(res as ApiResponse<ApiResponseStatus.FAILED>)
+        }
+        return
+      }
+      // Is a WsEvent
+      const event = parsed as WsEvent
       const ctx = { event, send: this.#ctxSend, tempdir: this.#tempdir, db: this.#db }
       const next = async (index: number): Promise<void> => {
         if (index >= this.#middlewares.length) return

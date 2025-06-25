@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { createMiddleware, type MiddlewareCtx, type Middleware } from '../app'
 import { Preset } from './preset'
-import { type ApiRequest } from '../types/api'
+import { type ApiRequest } from '../types/req'
 
 interface EableGroupOptions { rate: number, replyOnAt: boolean }
 interface EablePrivateOptions { rate: number }

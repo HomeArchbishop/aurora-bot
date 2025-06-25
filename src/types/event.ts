@@ -27,7 +27,7 @@ export type MessageEvent =
   | PrivateMessageEvent
   | GroupMessageEvent
 
-export type Event =
+export type WsEvent =
   | MetaEvent
   | NoticeEvent
   | RequestEvent
