@@ -18,6 +18,7 @@ type ReplyProcessorFn = (splits: ReplyRequestSplits[]) => Promise<ReplyRequestSp
 interface DBKey {
   history: string
   isShutup: string
+  equipment: string
 }
 
 interface CommandCallbackCtx extends MiddlewareCtx {
@@ -136,7 +137,7 @@ class ChatMiddleware {
     }
     const arr = handlers.map((handler, i) => handler(forkOnce(i + 1)))
     Object.defineProperty(arr, 'buildAll', {
-      value: function () {
+      value () {
         return this.map((mw: ChatMiddleware) => mw.build())
       },
       writable: false,
@@ -153,11 +154,11 @@ class ChatMiddleware {
       throw new Error('Model is not set')
     }
     const resp = await axios.request({
-      url: process.env.LLM_API_HOST + '/v1/chat/completions',
+      url: process.env.CHATBOT_LLM_API_HOST + '/v1/chat/completions',
       method: 'POST',
       headers: {
         Accept: 'application/json',
-        Authorization: `Bearer ${process.env.LLM_API_KEY}`,
+        Authorization: `Bearer ${process.env.CHATBOT_LLM_API_KEY}`,
         'User-Agent': 'PoloAPI/1.0.0 (https://poloai.top)',
         'Content-Type': 'application/json'
       },
@@ -187,7 +188,8 @@ class ChatMiddleware {
       }
       const dbKey: DBKey = {
         history: `chatbot:${this.#id}:history:${event.message_type}_${eventId}`,
-        isShutup: `chatbot:${this.#id}:shutup:${event.message_type}_${eventId}`
+        isShutup: `chatbot:${this.#id}:shutup:${event.message_type}_${eventId}`,
+        equipment: `chatbot:${this.#id}:equipment:${event.message_type}_${eventId}`
       }
       const isShutup = db.getSync(dbKey.isShutup) === 'true'
       // Define tool functions
@@ -225,7 +227,7 @@ class ChatMiddleware {
           dbKey,
           textSegmentRequest
         }
-        const args = rawMessage.split(/\s/).slice(1)
+        const args = rawMessage.split(/\s/).slice(1).map(arg => arg.trim()).filter(arg => arg.length > 0)
         await cmd.callback.call(this, ctx, args)
         return
       }
@@ -253,6 +255,7 @@ class ChatMiddleware {
         const preset = this.#preset.clone()
         preset.addReplaceOnce([/{{history_injection}}/g,
           formerHistory.split('\n').slice(-this.#presetHistoryInjectionCount).join('\n')])
+        preset.addReplaceOnce([/{{equipment}}/g, db.getSync(dbKey.equipment) ?? '(no equipment)'])
         for (const preprocessor of this.#presetPreprocessors) {
           await preprocessor(preset)
         }

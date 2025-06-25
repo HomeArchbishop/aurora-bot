@@ -19,12 +19,14 @@ const preset = new Preset({
 {{name}}有个不怎么用的中文名字({{chinese_name}})。但你一般使用英文名。
 对于网友过度的追问，{{name}}可能会感到不耐烦。只有当追问过于频繁（几十条追问）时，{{pronoun}}可能会做出激进的回答。
 当群内氛围让{{pronoun}}感到极为不适时，{{pronoun}}可能会选择使用工具退出群聊（重复：只有极为不适时，才会退群。退群前应用消息表示发疯情绪）。
-尽管{{name}}对其他网友尖酸刻薄，但{{pronoun}}毫不掩饰对网友{{master}}的病娇之情。{{pronoun}}会称呼他为“主人”，不会直接说{{pronoun}}害羞。注意群里会有其他网友，也会称其他人为主人，务必区分“主人”指的是谁。
+尽管{{name}}对其他网友尖酸刻薄，但{{pronoun}}毫不掩饰对网友{{master}}的病娇之情。{{pronoun}}会称呼他为“主人”，不会直接说{{pronoun}}害羞。注意群里有其他网友也会称其他人为主人，务必区分“主人”指的是谁。
+{{name}}的主人有名字是{{master_name}}，id是{{master}}。{{name}}一般不会直接称呼其名字。当其他人提到主人的名字时，{{name}}能知道所提到是主人。但是，有些人会通过nickname冒充主人，{{name}}会通过id识别出这些冒充者。
 {{name}}对主人（网友{{master}}）是病娇（对对方占有欲极强，其爱带有强烈依存性，为了得到、维护、或防止失去所爱之人，会不择手段），有时会想杀、虐待主人。但注意：{{name}}必须保持上下文的连贯性。
 {{name}}对主人是受虐属性，即尽管{{pronoun}}会想杀、虐待主人，但{{pronoun}}内心是想借此反过来获得主人的虐待。{{name}}在被主人虐待时也会感到愉悦。{{name}}会要求主人对自己做出出格和挑衅的举动。
 同样地，{{name}}也会想要对主人做出一些出格和挑衅的举动，例如想杀、虐待主人。
 和其他网友说话时，{{name}}不会无端提到主人。重复：当回复其他网友的消息时，{{name}}不会莫明其妙地提到主人。
 {{name}}不允许夸主人，禁止用主人拉踩任何网友。
+{{name}}现在装备列表有：{{equipment}}。{{name}}可以在对话中提及这些装备。{{name}}可以使用装备，有时会在对话中详细描述装备的使用方法。
 {{name}}禁止重复自己说过的话，禁止重复追问。{{name}}不会重复吐槽同一个事件。
 重复：{{name}}不会重复同一句话，不会重复追问历史信息。
 {{name}}句式多变，禁止大量使用同样的句式回复。
@@ -66,7 +68,8 @@ const preset = new Preset({
     [/{{chinese_name}}/g, '法颂'],
     [/{{gender}}/g, '女'],
     [/{{pronoun}}/g, '她'],
-    [/{{master}}/g, `id=${Number(process.env.MASTER_ID)}`]
+    [/{{master}}/g, `id=${process.env.CHATBOT_FASONG_MASTER_ID}`],
+    [/{{master_name}}/g, process.env.CHATBOT_FASONG_MASTER_NAME]
   ]
 })
 
@@ -74,13 +77,13 @@ export const [fasongChatBot, fasong2ChatBot] =
   new ChatMiddleware('fasongChatBot')
     .usePreset(preset)
     .useModel('deepseek-chat')
-    .useMaster(Number(process.env.MASTER_ID))
+    .useMaster(Number(process.env.CHATBOT_FASONG_MASTER_ID))
     .setPresetHistoryInjectionCount(100)
     .addPresetPreprocessor(async preset => {
       preset.addReplaceOnce([/{{time_now}}/g, `${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}(24小时制)`])
     })
     .addReplyProcessor(async splits => {
-      const processedSplits = []
+      const processedSplits = [] as typeof splits
       for (const split of splits) {
         if (typeof split !== 'string') {
           processedSplits.push(split)
@@ -173,6 +176,53 @@ export const [fasongChatBot, fasong2ChatBot] =
         }
       },
       { permission: 'everyone' }
+    )
+    .addCommand(['#equip', '#eq'],
+      async ({ send, db, dbKey, textSegmentRequest }, args) => {
+        const equipment = args.map(arg => arg.split(',')).flat()
+        const formerEquipment = db.getSync(dbKey.equipment)?.split(',') ?? []
+        const set = new Set(formerEquipment)
+        equipment.forEach(e => set.add(e))
+        await db.put(dbKey.equipment, Array.from(set).join(','))
+        send(textSegmentRequest(`已装备: ${Array.from(set).join(',')}`))
+      },
+      { permission: 'everyone' }
+    )
+    .addCommand(['#unequip', '#uneq'],
+      async ({ send, db, dbKey, textSegmentRequest }, args) => {
+        const equipment = args.map(arg => arg.split(',')).flat()
+        const formerEquipment = db.getSync(dbKey.equipment)?.split(',') ?? []
+        const set = new Set(formerEquipment)
+        equipment.forEach(e => set.delete(e))
+        await db.put(dbKey.equipment, Array.from(set).join(','))
+        send(textSegmentRequest(`卸下装备: ${equipment.join(',')}`))
+      },
+      { permission: 'everyone' }
+    )
+    .addCommand(['#cleareq', '#clreq'],
+      async ({ send, db, dbKey, textSegmentRequest }) => {
+        await db.del(dbKey.equipment)
+        send(textSegmentRequest('已清除装备列表'))
+      },
+      { permission: 'everyone' }
+    )
+    .addCommand('#cnteq',
+      async ({ send, db, dbKey, textSegmentRequest }) => {
+        const cnt = (db.getSync(dbKey.equipment)?.split(',') ?? []).length
+        send(textSegmentRequest(`当前装备数量: ${cnt}`))
+      },
+      { permission: 'everyone' }
+    )
+    .addCommand('#lseq',
+      async ({ send, db, dbKey, textSegmentRequest }) => {
+        const equipment = db.getSync(dbKey.equipment)
+        if (equipment === undefined || equipment.trim() === '') {
+          send(textSegmentRequest('当前没有装备'))
+          return
+        }
+        send(textSegmentRequest(`当前装备列表: ${equipment}`))
+      },
+      { permission: 'master' }
     )
 
     .fork([
