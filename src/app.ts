@@ -86,6 +86,7 @@ class App {
 
     this.#ws.addEventListener('error', (err) => {
       this.#logger.error('ws error: ' + err.message)
+      throw new Error('WebSocket error: ' + err.message)
     })
 
     this.#ws.addEventListener('message', (wsMsgEvent) => {

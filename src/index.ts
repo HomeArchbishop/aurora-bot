@@ -43,4 +43,6 @@ app
 
 db.open()
   .then(() => { app.start() })
-  .catch(console.error)
+  .catch(() => {
+    process.exit(1)
+  })

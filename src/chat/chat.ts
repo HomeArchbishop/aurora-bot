@@ -205,7 +205,7 @@ class ChatMiddleware {
         const timenow = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
         const senderNickname = (isGroup ? event.sender.card : event.sender.nickname) ?? 'unknown'
         const updatedHistoryPiece = isSelf
-          ? `(real_you,你,id[${event.self_id}],msgid[${event.message_id}],time[${timenow}]): ${comingMsg}`
+          ? `(real_you,你,id[${event.self_id}],msgid[unknown],time[${timenow}]): ${comingMsg}`
           : `(others,nickname[${senderNickname}],id[${event.user_id}],msgid[${event.message_id}],time[${timenow}]): ${comingMsg}`
         const newHistory = `${formerHistory}\n${updatedHistoryPiece}`
         await db.put(dbKey.history, newHistory)
