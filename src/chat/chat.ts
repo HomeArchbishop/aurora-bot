@@ -42,6 +42,8 @@ class ChatMiddleware {
   readonly #enabled: Array<{ id: number, type: 'group' | 'private', rate: number, replyOnAt: boolean }> = []
   #allowNext: boolean = false
   #model?: string
+  #temperature: number = 0.7
+  #topP: number = 0.7
   #chatMode: ChatMode = ChatMode.Normal
   #masters = new Set<number>()
 
@@ -58,6 +60,16 @@ class ChatMiddleware {
 
   useModel (model: string): this {
     this.#model = model
+    return this
+  }
+
+  useTemperature (temperature: number): this {
+    this.#temperature = temperature
+    return this
+  }
+
+  useTopP (topP: number): this {
+    this.#topP = topP
     return this
   }
 
@@ -122,6 +134,8 @@ class ChatMiddleware {
       const newMw = new ChatMiddleware(`${this.#id}_fork_${i}`)
       newMw.#preset = this.#preset.clone()
       newMw.#model = this.#model
+      newMw.#temperature = this.#temperature
+      newMw.#topP = this.#topP
       newMw.#enabled.push(...this.#enabled)
       newMw.#allowNext = this.#allowNext
       newMw.#chatMode = this.#chatMode
@@ -159,12 +173,15 @@ class ChatMiddleware {
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${process.env.CHATBOT_LLM_API_KEY}`,
-        'User-Agent': 'PoloAPI/1.0.0 (https://poloai.top)',
+        // 'User-Agent': 'PoloAPI/1.0.0 (https://poloai.top)',
         'Content-Type': 'application/json'
       },
       data: {
         model: this.#model,
-        messages
+        messages,
+        stream: false,
+        temperature: this.#temperature,
+        top_p: this.#topP
       }
     })
     return resp.data.choices[0].message.content.trim()
@@ -290,7 +307,7 @@ class ChatMiddleware {
         const selfComingMsg = splits.filter(split => typeof split === 'string').join(' ')
         await updateHistoryToDb(selfComingMsg, true)
       } catch (err: any) {
-        send(textSegmentRequest('发生错误' + err.message))
+        send(textSegmentRequest(`error@plugin:chatbot:${this.#id} [${err.message}] ${err.response?.data?.message ?? ''}`))
       }
     })
   }
