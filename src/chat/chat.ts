@@ -1,7 +1,7 @@
-import axios from 'axios'
 import { createMiddleware, type MiddlewareCtx, type Middleware } from '../app'
 import { Preset } from './preset'
 import { type ApiRequest } from '../types/req'
+import { type LLM } from '../llm/llm'
 
 interface EableGroupOptions { rate: number, replyOnAt: boolean }
 interface EablePrivateOptions { rate: number }
@@ -41,9 +41,6 @@ class ChatMiddleware {
   #preset: Preset = new Preset({ template: '' })
   readonly #enabled: Array<{ id: number, type: 'group' | 'private', rate: number, replyOnAt: boolean }> = []
   #allowNext: boolean = false
-  #model?: string
-  #temperature: number = 0.7
-  #topP: number = 0.7
   #chatMode: ChatMode = ChatMode.Normal
   #masters = new Set<number>()
 
@@ -53,23 +50,15 @@ class ChatMiddleware {
 
   readonly #commands: Array<{ command: RegExp[], permission: CommandOptions['permission'], callback: CommandCallback }> = []
 
+  #llm?: LLM
+
   usePreset (preset: Preset): this {
     this.#preset = preset.clone()
     return this
   }
 
-  useModel (model: string): this {
-    this.#model = model
-    return this
-  }
-
-  useTemperature (temperature: number): this {
-    this.#temperature = temperature
-    return this
-  }
-
-  useTopP (topP: number): this {
-    this.#topP = topP
+  useLLM (llm: LLM): this {
+    this.#llm = llm
     return this
   }
 
@@ -133,9 +122,7 @@ class ChatMiddleware {
     const forkOnce = (i: number): ChatMiddleware => {
       const newMw = new ChatMiddleware(`${this.#id}_fork_${i}`)
       newMw.#preset = this.#preset.clone()
-      newMw.#model = this.#model
-      newMw.#temperature = this.#temperature
-      newMw.#topP = this.#topP
+      newMw.#llm = this.#llm?.clone()
       newMw.#enabled.push(...this.#enabled)
       newMw.#allowNext = this.#allowNext
       newMw.#chatMode = this.#chatMode
@@ -162,30 +149,6 @@ class ChatMiddleware {
   }
 
   get bubble (): this { return this }
-
-  async #completions (messages: Array<Record<'role' | 'content', string>>): Promise<string> {
-    if (this.#model === undefined) {
-      throw new Error('Model is not set')
-    }
-    const resp = await axios.request({
-      url: process.env.CHATBOT_LLM_API_HOST + '/v1/chat/completions',
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${process.env.CHATBOT_LLM_API_KEY}`,
-        // 'User-Agent': 'PoloAPI/1.0.0 (https://poloai.top)',
-        'Content-Type': 'application/json'
-      },
-      data: {
-        model: this.#model,
-        messages,
-        stream: false,
-        temperature: this.#temperature,
-        top_p: this.#topP
-      }
-    })
-    return resp.data.choices[0].message.content.trim()
-  }
 
   get mw (): Middleware {
     return createMiddleware(async (mwCtx, next) => {
@@ -269,6 +232,9 @@ class ChatMiddleware {
       }
       // Not ignore, then handle the message
       try {
+        if (this.#llm === undefined) {
+          throw new Error('LLM is not set')
+        }
         const preset = this.#preset.clone()
         preset.addReplaceOnce([/{{history_injection}}/g,
           formerHistory.split('\n').slice(-this.#presetHistoryInjectionCount).join('\n')])
@@ -276,7 +242,7 @@ class ChatMiddleware {
         for (const preprocessor of this.#presetPreprocessors) {
           await preprocessor(preset)
         }
-        const replyString = await this.#completions([
+        const replyString = await this.#llm.completions([
           { role: 'system', content: preset.prompt },
           { role: 'user', content: updatedHistoryPiece }
         ])
