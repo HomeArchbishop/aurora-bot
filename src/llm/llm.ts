@@ -43,13 +43,15 @@ class LLM {
     if (this.#model === undefined) {
       throw new Error('Model is not set')
     }
+    const keyIndex = Math.floor(Math.random() * this.#keys.length)
+    const key = this.#keys[keyIndex]
     try {
       const resp = await axios.request({
         url: this.#buildURL('/v1/chat/completions'),
         method: 'POST',
         headers: {
           Accept: 'application/json',
-          Authorization: `Bearer ${this.#keys[Math.floor(Math.random() * this.#keys.length)]}`,
+          Authorization: `Bearer ${key}`,
           'Content-Type': 'application/json',
           ...this.#additionalHeaders
         },
@@ -64,7 +66,14 @@ class LLM {
       return resp.data.choices[0].message.content.trim()
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        throw new Error(`@llmRequest [${err.message}] ${err.response?.data?.message ?? ''}`)
+        if (err.response !== undefined) {
+          if (err.response.status >= 400 && err.response.status < 500) {
+            throw new Error(`@llmRequest [${err.message}] ${err.response.data.message ?? ''} (key: #${keyIndex} ${key.slice(0, 6)}...)`)
+          } else {
+            throw new Error(`@llmRequest [${err.message}] ${err.response.data.message ?? ''}`)
+          }
+        }
+        throw new Error(`@llmRequest [${err.message}]`)
       } else {
         throw new Error(`@llmRequest ${err instanceof Error ? err.message : String(err)}`)
       }
