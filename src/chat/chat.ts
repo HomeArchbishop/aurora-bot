@@ -273,7 +273,8 @@ class ChatMiddleware {
         const selfComingMsg = splits.filter(split => typeof split === 'string').join(' ')
         await updateHistoryToDb(selfComingMsg, true)
       } catch (err: any) {
-        send(textSegmentRequest(`error@plugin:chatbot:${this.#id} [${err.message}] ${err.response?.data?.message ?? ''}`))
+        const errorMessage = err instanceof Error ? err.message : String(err)
+        send(textSegmentRequest(`error@plugin:chatbot:${this.#id}${errorMessage.startsWith('@') ? '' : ' '}${errorMessage}`))
       }
     })
   }

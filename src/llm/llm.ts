@@ -43,24 +43,32 @@ class LLM {
     if (this.#model === undefined) {
       throw new Error('Model is not set')
     }
-    const resp = await axios.request({
-      url: this.#buildURL('/v1/chat/completions'),
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${this.#keys[Math.floor(Math.random() * this.#keys.length)]}`,
-        'Content-Type': 'application/json',
-        ...this.#additionalHeaders
-      },
-      data: {
-        model: this.#model,
-        messages,
-        stream: false,
-        temperature: this.#temperature,
-        top_p: this.#topP
+    try {
+      const resp = await axios.request({
+        url: this.#buildURL('/v1/chat/completions'),
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${this.#keys[Math.floor(Math.random() * this.#keys.length)]}`,
+          'Content-Type': 'application/json',
+          ...this.#additionalHeaders
+        },
+        data: {
+          model: this.#model,
+          messages,
+          stream: false,
+          temperature: this.#temperature,
+          top_p: this.#topP
+        }
+      })
+      return resp.data.choices[0].message.content.trim()
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        throw new Error(`@llmRequest [${err.message}] ${err.response?.data?.message ?? ''}`)
+      } else {
+        throw new Error(`@llmRequest ${err instanceof Error ? err.message : String(err)}`)
       }
-    })
-    return resp.data.choices[0].message.content.trim()
+    }
   }
 
   clone (): LLM {
