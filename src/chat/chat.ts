@@ -192,7 +192,7 @@ class ChatMiddleware {
         return [formerHistory, updatedHistoryPiece]
       }
       // Handle Commands
-      const rawMessage = event.message.filter(seg => seg.type === 'text').map(seg => seg.data.text).join('').trim()
+      const rawMessage = event.raw_message.trim()
       for (const cmd of this.#commands) {
         if (!cmd.command.some(reg => reg.test(rawMessage))) { continue }
         if (cmd.permission === 'master' && !isFromMaster) {
