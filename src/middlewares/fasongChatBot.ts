@@ -239,6 +239,23 @@ export const [fasongChatBot, fasong2ChatBot] =
       },
       { permission: 'master' }
     )
+    .addCommand(['#refreshkey', '#key'],
+      async ({ send, textSegmentRequest, llm }, args) => {
+        if (llm === undefined) {
+          send(textSegmentRequest('LLM未初始化，请稍后再试'))
+          return
+        }
+        await llm.refreshKeyStatus()
+        const keyStatus = llm.getKeyStatus()
+        send(textSegmentRequest(
+          '已检查 keys 状态\n' +
+          keyStatus.map((status, i) =>
+            `#${i.toString().padEnd(4, ' ')}\t${status === 'ok' ? '✅' : status === 'bad' ? '❌' : '❓'}`
+          ).join('\n')
+        ))
+      },
+      { permission: 'master' }
+    )
 
     .fork([
       fork1 => fork1

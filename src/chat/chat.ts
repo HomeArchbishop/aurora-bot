@@ -23,6 +23,7 @@ interface DBKey {
 
 interface CommandCallbackCtx extends MiddlewareCtx {
   dbKey: DBKey
+  llm?: LLM
   textSegmentRequest: (str: string) => Omit<ApiRequest, 'echo'>
 }
 type CommandCallback = (ctx: CommandCallbackCtx, args: string[]) => Promise<void>
@@ -205,6 +206,7 @@ class ChatMiddleware {
         const ctx: CommandCallbackCtx = {
           ...mwCtx,
           dbKey,
+          llm: this.#llm,
           textSegmentRequest
         }
         const args = rawMessage.split(/\s/).slice(1).map(arg => arg.trim()).filter(arg => arg.length > 0)
