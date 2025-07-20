@@ -1,7 +1,7 @@
 import { logger } from './logger'
 import { db } from './db'
 import App from './app'
-// import { everyMinSend198MsgFactory } from './jobs/everyMinSend198Msg'
+// import { everyMinSend198Msg } from './jobs/everyMinSend198Msg'
 // import { onlyEchoMe } from './middlewares/onlyEchoMe'
 // import { forwardEveryEmotion } from './middlewares/forwardEveryEmotion'
 import { reportConnect } from './middlewares/reportConnect'
@@ -38,12 +38,12 @@ app
   // .useMw(onlyEchoMe)
   // .useMw(accelerateGif)
   // .useMw(forwardEveryEmotion)
-  // .useJob(...everyMinSend198MsgFactory())
+  // .useJob(...everyMinSend198Msg)
   .useMw(checkKeyStatus)
 
   /* teachermate */
   .useMw(tiichermateController)
-  .useJob(...tiichermate())
+  .useJob(...tiichermate)
 
   /* chat bot */
   .useMw(fasongChatBot)

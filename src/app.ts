@@ -189,10 +189,14 @@ function createMiddleware (mw: Middleware): Middleware {
   return mw
 }
 
+function createJob (spec: string, job: Job): [string, Job] {
+  return [spec, job]
+}
+
 function createWebhook (webhookId: string, webhook: Webhook): [string, Webhook] {
   return [webhookId, webhook]
 }
 
 export default App
-export { createMiddleware, createWebhook }
-export type { Middleware, Job, MiddlewareCtx }
+export { createMiddleware, createJob, createWebhook }
+export type { Middleware, MiddlewareCtx }
