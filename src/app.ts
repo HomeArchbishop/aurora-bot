@@ -7,11 +7,14 @@ import path from 'path'
 import { existsSync, mkdirSync } from 'fs'
 import { type Level } from 'level'
 import type { ApiResponseStatus, ApiResponse } from './types/res'
+import { WebhookServer, type WebhookTriggerCtx } from './webserver'
 
 interface AppOptions {
   url: string
   logger: winston.Logger
   db: Level<string, string>
+  webhookServerPort?: number
+  webhookToken?: string
 }
 
 type ApiResCallback<
@@ -26,14 +29,17 @@ type CtxSend = <T extends ApiActionName>(
 
 interface MiddlewareCtx { event: WsEvent, send: CtxSend, tempdir: string, db: Level<string, string> }
 interface JobCtx { send: CtxSend, tempdir: string, db: Level<string, string> }
+interface WebhookCtx { send: CtxSend, tempdir: string, db: Level<string, string>, triggerCtx: WebhookTriggerCtx }
 type Middleware = (ctx: MiddlewareCtx, next: () => Promise<void>) => Promise<void>
 type Job = (ctx: JobCtx) => Promise<void>
+type Webhook = (ctx: WebhookCtx) => Promise<void>
 
 class App {
-  constructor ({ url, logger, db }: AppOptions) {
+  constructor ({ url, logger, db, webhookServerPort = 3000, webhookToken }: AppOptions) {
     this.#logger = logger
     this.#ws = new WebSocket(url)
     this.#db = db
+    this.#webhookServer.setPort(webhookServerPort).setToken(webhookToken)
 
     if (!existsSync(this.#tempdir)) {
       this.#logger.info('tempdir not exists, creating...')
@@ -53,6 +59,7 @@ class App {
     }
   }
 
+  readonly #webhookServer = new WebhookServer()
   readonly #logger: winston.Logger
   readonly #ws: WebSocket
   readonly #db: Level<string, string>
@@ -89,6 +96,35 @@ class App {
       }
     })
     this.#logger.info(`job ${name} ${index} with spec:"${spec}" created`)
+    return this
+  }
+
+  useWebhook (webhookId: string, webhook: Webhook): this {
+    if (!this.#webhookServer.getState().isStarted) {
+      this.#logger.warn('Webhook server is not started, starting it now...')
+      try {
+        this.#webhookServer.start()
+      } catch (err: any) {
+        this.#logger.error('Failed to start webhook server: ' + err.message)
+        if (err instanceof Error) {
+          this.#logger.error(err.stack)
+        }
+        throw new Error('Failed to start webhook server: ' + err.message)
+      }
+    }
+    this.#webhookServer.useTrigger(webhookId, async (triggerCtx) => {
+      const ctx: WebhookCtx = { send: this.#ctxSend, tempdir: this.#tempdir, db: this.#db, triggerCtx }
+      try {
+        this.#logger.info(`webhook ${webhook.name} triggered and processing`)
+        await webhook(ctx)
+        this.#logger.info(`webhook ${webhook.name} triggered successfully`)
+      } catch (err: any) {
+        this.#logger.error(`webhook ${webhook.name} processing error: ` + err.message)
+        if (err instanceof Error) {
+          this.#logger.error(err.stack)
+        }
+      }
+    })
     return this
   }
 
@@ -153,6 +189,10 @@ function createMiddleware (mw: Middleware): Middleware {
   return mw
 }
 
+function createWebhook (webhookId: string, webhook: Webhook): [string, Webhook] {
+  return [webhookId, webhook]
+}
+
 export default App
-export { createMiddleware }
+export { createMiddleware, createWebhook }
 export type { Middleware, Job, MiddlewareCtx }

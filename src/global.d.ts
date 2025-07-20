@@ -3,6 +3,7 @@ declare namespace NodeJS {
     VERSION: string
     NAPCAT_WS_URL: string
     MASTER_ID: string
+    WEBHOOK_TOKEN?: string
     CHATBOT_LLM_API_HOST: string
     CHATBOT_LLM_API_KEYS: string
     CHATBOT_FASONG_MASTER_ID: string

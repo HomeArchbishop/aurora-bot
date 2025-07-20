@@ -12,6 +12,8 @@ import { checkConn } from './middlewares/checkConn'
 import { fasongChatBot, fasong2ChatBot } from './middlewares/fasongChatBot'
 import { checkVersion } from './middlewares/checkVersion'
 import { checkKeyStatus } from './middlewares/checkKeyStatus'
+// import { sendHi } from './webhooks/sendHi'
+import { ledger } from './webhooks/ledger'
 // import { onlyEchoMeAndSendID } from './middlewares/onlyEchoMeAndSendID'
 // import { fasong2ChatBot } from './middlewares/fasong2ChatBot'
 // import { accelerateGif } from './middlewares/accelerateGif'
@@ -19,7 +21,9 @@ import { checkKeyStatus } from './middlewares/checkKeyStatus'
 const app = new App({
   url: process.env.NAPCAT_WS_URL,
   logger,
-  db
+  db,
+  webhookServerPort: 10721,
+  webhookToken: process.env.WEBHOOK_TOKEN
 })
 
 app
@@ -44,6 +48,9 @@ app
   /* chat bot */
   .useMw(fasongChatBot)
   .useMw(fasong2ChatBot)
+
+  // .useWebhook(...sendHi)
+  .useWebhook(...ledger)
 
 db.open()
   .then(() => { app.start() })
