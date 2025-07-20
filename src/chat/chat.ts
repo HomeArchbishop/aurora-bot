@@ -1,7 +1,11 @@
-import { createMiddleware, type MiddlewareCtx, type Middleware } from '../app'
+import { createMiddleware } from '../app'
 import { Preset } from './preset'
 import { type ApiRequest } from '../types/req'
 import { type LLM } from '../llm/llm'
+
+// Define types for the chat middleware, based on `typeof createMiddleware` function
+type Middleware = ReturnType<typeof createMiddleware>
+type MiddlewareCtx = Parameters<Middleware>[0]
 
 interface EableGroupOptions { rate: number, replyOnAt: boolean }
 interface EablePrivateOptions { rate: number }

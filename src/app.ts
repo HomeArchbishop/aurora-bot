@@ -199,4 +199,3 @@ function createWebhook (webhookId: string, webhook: Webhook): [string, Webhook] 
 
 export default App
 export { createMiddleware, createJob, createWebhook }
-export type { Middleware, MiddlewareCtx }
