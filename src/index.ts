@@ -14,6 +14,8 @@ import { checkVersion } from './middlewares/checkVersion'
 import { checkKeyStatus } from './middlewares/checkKeyStatus'
 // import { sendHi } from './webhooks/sendHi'
 import { ledger } from './webhooks/ledger'
+import { vnEvent } from './jobs/vnEvent'
+import { vnReleaseEvent } from './middlewares/vnReleaseEvent'
 // import { onlyEchoMeAndSendID } from './middlewares/onlyEchoMeAndSendID'
 // import { fasong2ChatBot } from './middlewares/fasong2ChatBot'
 // import { accelerateGif } from './middlewares/accelerateGif'
@@ -40,6 +42,8 @@ app
   // .useMw(forwardEveryEmotion)
   // .useJob(...everyMinSend198Msg)
   .useMw(checkKeyStatus)
+  .useJob(...vnEvent)
+  .useMw(vnReleaseEvent)
 
   /* teachermate */
   .useMw(tiichermateController)
