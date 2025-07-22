@@ -17,6 +17,7 @@ export const vnReleaseEvent = createMiddleware(async (ctx, next) => {
         action: isGroup ? 'send_group_msg' : 'send_private_msg',
         params: {
           user_id: eventId,
+          group_id: eventId,
           message: '日期格式错误，请使用 YYYYMMDD 格式'
         }
       })
@@ -26,6 +27,7 @@ export const vnReleaseEvent = createMiddleware(async (ctx, next) => {
       action: isGroup ? 'send_group_msg' : 'send_private_msg',
       params: {
         user_id: eventId,
+        group_id: eventId,
         message: `正在获取 ${date} 的发布信息，请稍候...`
       }
     })

@@ -102,6 +102,7 @@ async function sendVNRelease ({ date, isGroup, eventId }: SendVNReleaseOptions, 
         action: isGroup ? 'send_group_forward_msg' : 'send_private_forward_msg',
         params: {
           user_id: eventId,
+          group_id: eventId,
           messages: messages.slice(i, i + max).map(message => ({
             type: 'node',
             data: {
@@ -138,6 +139,7 @@ async function sendVNRelease ({ date, isGroup, eventId }: SendVNReleaseOptions, 
       action: isGroup ? 'send_group_msg' : 'send_private_msg',
       params: {
         user_id: eventId,
+        group_id: eventId,
         message: `获取VNDB发布信息失败: ${err.message}`
       }
     })
