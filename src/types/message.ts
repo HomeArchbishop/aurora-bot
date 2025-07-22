@@ -1,6 +1,7 @@
-export type Message = string | MessageSegment[] | MessageSegment
+export type MessageSend = string | MessageSegmentSend[] | MessageSegmentSend
+export type MessageReceive = string | MessageSegmentReceive[] | MessageSegmentReceive
 
-export type MessageSegment =
+export type MessageSegmentSend =
   | TextSegment
   | FaceSegment
   | ImageSegment
@@ -17,8 +18,24 @@ export type MessageSegment =
   | LocationSegment
   | MusicSegment
   | ReplySegment
-  | ForwardSegment
   | NodeSegment
+  | XmlSegment
+  | JsonSegment
+
+export type MessageSegmentReceive =
+  | TextSegment
+  | FaceSegment
+  | ImageSegment
+  | RecordSegment
+  | VideoSegment
+  | AtSegment
+  | RpsSegment
+  | DiceSegment
+  | ShareSegment
+  | ContactSegment
+  | LocationSegment
+  | ReplySegment
+  | ForwardSegment
   | XmlSegment
   | JsonSegment
 
@@ -189,7 +206,7 @@ export interface NodeSegment {
     id?: string
     user_id?: string
     nickname?: string
-    content?: string | MessageSegment[]
+    content?: MessageSend
   }
 }
 

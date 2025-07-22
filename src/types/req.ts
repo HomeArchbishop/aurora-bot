@@ -1,5 +1,5 @@
 // 定义 API 接口的类型
-import type { Message } from './message'
+import type { MessageSend, NodeSegment } from './message'
 
 export type ApiActionName = 'send_private_msg'
 | 'send_group_msg'
@@ -39,17 +39,42 @@ export type ApiActionName = 'send_private_msg'
 | 'get_version_info'
 | 'set_restart'
 | 'clean_cache'
-| 'get_credentials'
-| 'get_cookies'
-| 'get_csrf_token'
-| 'get_record'
-| 'get_image'
-| 'can_send_image'
-| 'can_send_record'
-| 'get_status'
-| 'get_version_info'
-| 'set_restart'
-| 'clean_cache'
+// CQhttp 补充
+| 'set_qq_profile'
+| 'qidian_get_account_info'
+| '_get_model_show'
+| '_set_model_show'
+| 'get_online_clients'
+| 'get_unidirectional_friend_list'
+| 'delete_unidirectional_friend'
+| 'delete_friend'
+| 'mark_msg_as_read'
+| 'send_group_forward_msg'
+| 'send_private_forward_msg'
+| 'get_group_msg_history'
+| 'ocr_image'
+| 'set_essence_msg'
+| 'delete_essence_msg'
+| 'get_essence_msg_list'
+| 'get_group_at_all_remain'
+| 'set_group_portrait'
+| 'send_group_sign'
+| '_send_group_notice'
+| '_get_group_notice'
+| 'upload_group_file'
+| 'delete_group_file'
+| 'create_group_file_folder'
+| 'delete_group_folder'
+| 'get_group_file_system_info'
+| 'get_group_root_files'
+| 'get_group_files_by_folder'
+| 'get_group_file_url'
+| 'upload_private_file'
+| 'download_file'
+| 'check_url_safely'
+| '.get_word_slices'
+| '.handle_quick_operation'
+| 'reload_event_filter'
 
 interface RequestParamsMap {
   'send_private_msg': SendPrivateMsgParams
@@ -90,6 +115,41 @@ interface RequestParamsMap {
   'get_version_info': NoParams
   'set_restart': SetRestartParams
   'clean_cache': NoParams
+  'set_qq_profile': SetQQProfileParams
+  'qidian_get_account_info': QidianGetAccountInfoParams
+  '_get_model_show': GetModelShowParams
+  '_set_model_show': SetModelShowParams
+  'get_online_clients': GetOnlineClientsParams
+  'get_unidirectional_friend_list': GetUnidirectionalFriendListParams
+  'delete_unidirectional_friend': DeleteUnidirectionalFriendParams
+  'delete_friend': DeleteFriendParams
+  'mark_msg_as_read': MarkMsgAsReadParams
+  'send_group_forward_msg': SendGroupForwardMsgParams
+  'send_private_forward_msg': SendPrivateForwardMsgParams
+  'get_group_msg_history': GetGroupMsgHistoryParams
+  'ocr_image': OcrImageParams
+  'set_essence_msg': SetEssenceMsgParams
+  'delete_essence_msg': DeleteEssenceMsgParams
+  'get_essence_msg_list': GetEssenceMsgListParams
+  'get_group_at_all_remain': GetGroupAtAllRemainParams
+  'set_group_portrait': SetGroupPortraitParams
+  'send_group_sign': SendGroupSignParams
+  '_send_group_notice': SendGroupNoticeParams
+  '_get_group_notice': GetGroupNoticeParams
+  'upload_group_file': UploadGroupFileParams
+  'delete_group_file': DeleteGroupFileParams
+  'create_group_file_folder': CreateGroupFileFolderParams
+  'delete_group_folder': DeleteGroupFolderParams
+  'get_group_file_system_info': GetGroupFileSystemInfoParams
+  'get_group_root_files': GetGroupRootFilesParams
+  'get_group_files_by_folder': GetGroupFilesByFolderParams
+  'get_group_file_url': GetGroupFileUrlParams
+  'upload_private_file': UploadPrivateFileParams
+  'download_file': DownloadFileParams
+  'check_url_safely': CheckUrlSafelyParams
+  '.get_word_slices': GetWordSlicesParams
+  '.handle_quick_operation': HandleQuickOperationParams
+  'reload_event_filter': ReloadEventFilterParams
 }
 
 export interface ApiRequest<T extends ApiActionName = ApiActionName> {
@@ -101,14 +161,14 @@ export interface ApiRequest<T extends ApiActionName = ApiActionName> {
 // 发送私聊消息
 export interface SendPrivateMsgParams {
   user_id: number
-  message: Message
+  message: MessageSend
   auto_escape?: boolean
 }
 
 // 发送群消息
 export interface SendGroupMsgParams {
   group_id: number
-  message: Message
+  message: MessageSend
   auto_escape?: boolean
 }
 
@@ -117,7 +177,7 @@ export interface SendMsgParams {
   message_type?: 'private' | 'group'
   user_id?: number
   group_id?: number
-  message: Message
+  message: MessageSend
   auto_escape?: boolean
 }
 
@@ -279,6 +339,209 @@ export interface GetImageParams {
 // 重启 OneBot 实现
 export interface SetRestartParams {
   delay?: number
+}
+
+// 设置QQ个人资料的请求参数
+export interface SetQQProfileParams {
+  nickname?: string
+  company?: string
+  email?: string
+  college?: string
+  personal_note?: string
+}
+
+// 获取企点账号信息的请求参数
+export interface QidianGetAccountInfoParams {
+  no_cache?: boolean
+}
+
+// 获取QQ空间个性卡片展示信息的请求参数
+export interface GetModelShowParams {
+  model: string
+}
+
+// 设置QQ空间个性卡片展示信息的请求参数
+export interface SetModelShowParams {
+  model: string
+  model_show: boolean
+}
+
+// 获取当前账号在线客户端列表的请求参数
+export interface GetOnlineClientsParams {
+  no_cache?: boolean
+}
+
+// 获取单向好友列表的请求参数
+export interface GetUnidirectionalFriendListParams {
+  no_cache?: boolean
+}
+
+// 删除单向好友的请求参数
+export interface DeleteUnidirectionalFriendParams {
+  user_id: number
+}
+
+// 删除好友的请求参数
+export interface DeleteFriendParams {
+  user_id: number
+}
+
+// 标记消息已读
+export interface MarkMsgAsReadParams {
+  message_id: number
+}
+
+// 发送合并转发消息到群
+export interface SendGroupForwardMsgParams {
+  group_id: number
+  messages: NodeSegment[]
+}
+
+// 发送合并转发消息到私聊
+export interface SendPrivateForwardMsgParams {
+  user_id: number
+  messages: NodeSegment[]
+}
+
+// 获取群消息历史记录
+export interface GetGroupMsgHistoryParams {
+  message_seq?: number
+  group_id: number
+}
+
+// 图片OCR识别
+export interface OcrImageParams {
+  image: string
+}
+
+// 设置精华消息
+export interface SetEssenceMsgParams {
+  message_id: number
+}
+
+// 删除精华消息
+export interface DeleteEssenceMsgParams {
+  message_id: number
+}
+
+// 获取精华消息列表
+export interface GetEssenceMsgListParams {
+  group_id: number
+}
+
+// 获取群@全体成员剩余次数
+export interface GetGroupAtAllRemainParams {
+  group_id: number
+}
+
+// 设置群头像
+export interface SetGroupPortraitParams {
+  group_id: number
+  file: string
+  cache?: number
+}
+
+// 群打卡
+export interface SendGroupSignParams {
+  group_id: number
+}
+
+// 发送群公告
+export interface SendGroupNoticeParams {
+  group_id: number
+  content: string
+  image?: string
+}
+
+// 获取群公告
+export interface GetGroupNoticeParams {
+  group_id: number
+}
+
+// 上传群文件
+export interface UploadGroupFileParams {
+  group_id: number
+  file: string
+  name: string
+  folder?: string
+}
+
+// 删除群文件
+export interface DeleteGroupFileParams {
+  group_id: number
+  file_id: string
+  busid: number
+}
+
+// 创建群文件目录
+export interface CreateGroupFileFolderParams {
+  group_id: number
+  name: string
+  parent_id?: string
+}
+
+// 删除群文件目录
+export interface DeleteGroupFolderParams {
+  group_id: number
+  folder_id: string
+}
+
+// 获取群文件系统信息
+export interface GetGroupFileSystemInfoParams {
+  group_id: number
+}
+
+// 获取群根目录文件列表
+export interface GetGroupRootFilesParams {
+  group_id: number
+}
+
+// 获取群子目录文件列表
+export interface GetGroupFilesByFolderParams {
+  group_id: number
+  folder_id: string
+}
+
+// 获取群文件资源链接
+export interface GetGroupFileUrlParams {
+  group_id: number
+  file_id: string
+  busid: number
+}
+
+// 上传私聊文件
+export interface UploadPrivateFileParams {
+  user_id: number
+  file: string
+  name: string
+}
+
+// 下载文件到缓存目录
+export interface DownloadFileParams {
+  url: string
+  thread_count?: number
+  headers?: string | string[]
+}
+
+// 检查链接安全性
+export interface CheckUrlSafelyParams {
+  url: string
+}
+
+// 获取中文分词
+export interface GetWordSlicesParams {
+  content: string
+}
+
+// 处理快速操作
+export interface HandleQuickOperationParams {
+  context: Record<string, any>
+  operation: Record<string, any>
+}
+
+// 重载事件过滤器
+export interface ReloadEventFilterParams {
+  file: string
 }
 
 // 无参数请求

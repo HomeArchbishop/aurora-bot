@@ -1,4 +1,4 @@
-import type { MessageSegment } from './message'
+import type { MessageSegmentReceive } from './message'
 
 export type PostType = 'message' | 'notice' | 'request' | 'meta_event'
 
@@ -200,7 +200,7 @@ export interface PrivateMessageEvent {
   sub_type: 'friend' | 'group' | 'other'
   message_id: number
   user_id: number
-  message: MessageSegment[]
+  message: MessageSegmentReceive[]
   raw_message: string
   font: number
   sender: {
@@ -225,7 +225,7 @@ export interface GroupMessageEvent {
     name: string
     flag: string
   } | null
-  message: MessageSegment[]
+  message: MessageSegmentReceive[]
   raw_message: string
   font: number
   sender: {
