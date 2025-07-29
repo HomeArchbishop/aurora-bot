@@ -3,7 +3,8 @@ import { sendVNRelease } from '../shared/sendVNDB'
 
 export const vnReleaseEvent = createMiddleware(async (ctx, next) => {
   const event = ctx.event
-  if (event.post_type === 'message' && /^(#?)vn\s|$/.test(event.raw_message)) {
+  if (event.post_type === 'message' && /^#?vn(\s|$)/.test(event.raw_message)) {
+    console.log(event.raw_message)
     const isGroup = event.message_type === 'group'
     const eventId = isGroup ? event.group_id : event.user_id
     const arg = event.raw_message.split(/\s+/)[1]
@@ -32,5 +33,7 @@ export const vnReleaseEvent = createMiddleware(async (ctx, next) => {
       }
     })
     await sendVNRelease({ date, isGroup, eventId }, ctx)
+    return
   }
+  await next()
 })

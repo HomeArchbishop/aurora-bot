@@ -131,6 +131,15 @@ async function sendVNRelease ({ date, isGroup, eventId }: SendVNReleaseOptions, 
             }
           }))
         }
+      }, () => {}, res => {
+        ctx.send({
+          action: isGroup ? 'send_group_msg' : 'send_private_msg',
+          params: {
+            user_id: eventId,
+            group_id: eventId,
+            message: `发送 VNDB 发布信息失败: ${res.message}`
+          }
+        })
       })
       Bun.sleepSync(1000)
     }

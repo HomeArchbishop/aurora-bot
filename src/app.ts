@@ -21,11 +21,20 @@ type ApiResCallback<
   S extends ApiResponseStatus = ApiResponseStatus, T extends ApiActionName = ApiActionName
 > = (res: Omit<ApiResponse<S, T>, 'echo'>) => void
 
-type CtxSend = <T extends ApiActionName>(
-  req: Omit<ApiRequest<T>, 'echo'>,
-  okCb?: ApiResCallback<ApiResponseStatus.OK, T>,
-  failedCb?: ApiResCallback<ApiResponseStatus.FAILED, T>
-) => void
+interface CtxSend {
+  <T extends ApiActionName>(
+    req: Omit<ApiRequest<T>, 'echo'>
+  ): void
+  <T extends ApiActionName>(
+    req: Omit<ApiRequest<T>, 'echo'>,
+    onResponse: ApiResCallback<ApiResponseStatus, T>,
+  ): void
+  <T extends ApiActionName>(
+    req: Omit<ApiRequest<T>, 'echo'>,
+    onSuccess: ApiResCallback<ApiResponseStatus.OK, T>,
+    onFailure: ApiResCallback<ApiResponseStatus.FAILED, T>
+  ): void
+}
 
 interface MiddlewareCtx { event: WsEvent, send: CtxSend, tempdir: string, db: Level<string, string> }
 interface JobCtx { send: CtxSend, tempdir: string, db: Level<string, string> }
@@ -47,11 +56,16 @@ class App {
       mkdirSync(this.#tempdir, { recursive: true })
     }
 
-    this.#ctxSend = (req, resOkCb, resfailedCb) => {
+    this.#ctxSend = <T extends ApiActionName>(
+      req: Omit<ApiRequest<T>, 'echo'>,
+      resOkCb?: ApiResCallback<ApiResponseStatus.OK, T>,
+      resFailedCb?: ApiResCallback<ApiResponseStatus.FAILED, T>
+    ): void => {
       const hash = Math.random().toString(36).slice(2, 10)
       const echoReq = { ...req, echo: hash }
       const raw = JSON.stringify(echoReq)
-      this.#apiResCallbacks.set(hash, [resOkCb as ApiResCallback<ApiResponseStatus.OK>, resfailedCb as ApiResCallback<ApiResponseStatus.FAILED>])
+      this.#apiResCallbacks.set(hash, [
+        resOkCb as ApiResCallback<ApiResponseStatus.OK>, (resFailedCb ?? resOkCb) as ApiResCallback<ApiResponseStatus.FAILED>])
       this.#logger.debug(`ws sending with echo:${hash}: ` + raw)
       this.#logger.silly(`ws sending with echo:${hash}: ` + JSON.stringify(echoReq, null, 2))
       this.#ws.send.bind(this.#ws)(raw)
