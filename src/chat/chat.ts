@@ -44,17 +44,15 @@ type InstanceMethodTuple<T, Ex = never> = {
   [Name in Exclude<keyof T, Ex>]: T[Name] extends (...args: Array<infer Arg>) => infer Return ? [Name, Arg[], Return] : never;
 }[Exclude<keyof T, Ex>]
 type ConstructionLogItem = InstanceMethodTuple<ChatMiddleware, 'recordConstructionLog'>
-// function constructionLog (target: any, propertyName: string | symbol, descriptor: PropertyDescriptor): void {
-//   const method = descriptor.value
-//   const that = target
-//   descriptor.value = function (...args: ConstructionLogItem): ConstructionLogItem[2] {
-//     that.recordConstructionLog([propertyName, args, method.apply(that, args)] as ConstructionLogItem)
-//     // console.log(`🔗 Chain: ${this._callChain.join(' -> ')}`)
-
-//     const result = method.apply(this, args)
-//     return result
-//   }
-// }
+function constructionLog (target: any, propertyName: string | symbol, descriptor: PropertyDescriptor): void {
+  const method = descriptor.value
+  descriptor.value = function (this: ChatMiddleware, ...args: ConstructionLogItem): ConstructionLogItem[2] {
+    // console.log(`🔗 Chain: ${this._callChain.join(' -> ')}`)
+    const result = method.apply(this, args)
+    this.recordConstructionLog([propertyName, args, result] as ConstructionLogItem)
+    return result
+  }
+}
 
 class ChatMiddleware {
   constructor (id: string) {
@@ -79,52 +77,61 @@ class ChatMiddleware {
 
   readonly #constructionLog: ConstructionLogItem[] = []
 
-  // @constructionLog
+  @constructionLog
   usePreset (preset: Preset): this {
     this.#preset = preset.clone()
     return this
   }
 
+  @constructionLog
   useLLM (llm: LLM): this {
     this.#llm = llm
     return this
   }
 
+  @constructionLog
   useMaster (masterId: number): this {
     this.#masters.add(masterId)
     return this
   }
 
+  @constructionLog
   enableGroup (groupId: number, options: EableGroupOptions = { rate: 0, replyOnAt: true }): this {
     this.#enabled.push({ id: groupId, type: 'group', rate: options.rate, replyOnAt: options.replyOnAt })
     return this
   }
 
+  @constructionLog
   enablePrivate (userId: number, options: EablePrivateOptions = { rate: 1 }): this {
     this.#enabled.push({ id: userId, type: 'private', rate: options.rate, replyOnAt: true })
     return this
   }
 
+  @constructionLog
   allowNext (): this {
     this.#allowNext = true
     return this
   }
 
+  @constructionLog
   useChatMode (mode: ChatMode): this {
     this.#chatMode = mode
     return this
   }
 
+  @constructionLog
   setPresetHistoryInjectionCount (cnt: number): this {
     this.#presetHistoryInjectionCount = cnt
     return this
   }
 
+  @constructionLog
   addPresetPreprocessor (fn: PresetPreprocessorFn): this {
     this.#presetPreprocessors.push(fn)
     return this
   }
 
+  @constructionLog
   addReplyProcessor (fn: ReplyProcessorFn): this {
     this.#replyProcessors.push(fn)
     return this
@@ -146,11 +153,20 @@ class ChatMiddleware {
     }
   }
 
-  addCommand = this.#createCommandRegistrar(this.#commands)
-  addSuperCommand = this.#createCommandRegistrar(this.#superCommands)
+  @constructionLog
+  addCommand (...args: Parameters<CommandRegistrar>): ReturnType<CommandRegistrar> {
+    return this.#createCommandRegistrar(this.#commands)(...args)
+  }
+
+  @constructionLog
+  addSuperCommand (...args: Parameters<CommandRegistrar>): ReturnType<CommandRegistrar> {
+    return this.#createCommandRegistrar(this.#superCommands)(...args)
+  }
 
   fork (): ChatMiddleware
   fork (handlers: Array<(mw: ChatMiddleware) => ChatMiddleware>): ChatMiddlewareForkedArray
+
+  @constructionLog
   fork (handlers?: Array<(mw: ChatMiddleware) => ChatMiddleware>): ChatMiddlewareForkedArray | ChatMiddleware {
     const forkOnce = (i: number): ChatMiddleware => {
       const newMw = new ChatMiddleware(`${this.#id}_fork_${i}`)
