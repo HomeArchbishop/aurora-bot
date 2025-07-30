@@ -25,15 +25,18 @@ interface DBKey {
   equipment: string
 }
 
+type CommandPattern = string | RegExp | Array<string | RegExp>
 interface CommandCallbackCtx extends MiddlewareCtx {
   dbKey: DBKey
   llm?: LLM
   textSegmentRequest: (str: string) => Omit<ApiRequest, 'echo'>
 }
-type CommandCallback = (ctx: CommandCallbackCtx, args: string[]) => Promise<void>
+type CommandCallback = (this: ChatMiddleware, ctx: CommandCallbackCtx, args: string[]) => Promise<void>
 interface CommandOptions {
   permission: 'master' | 'everyone' | number[]
 }
+type CommandRegistrar = (command: CommandPattern, cb: CommandCallback, options: CommandOptions) => ChatMiddleware
+type CommandRegistry = Array<{ command: RegExp[], permission: CommandOptions['permission'], callback: CommandCallback }>
 
 type ChatMiddlewareForkedArray = ChatMiddleware[] & { buildAll: () => Middleware[] }
 
@@ -53,7 +56,8 @@ class ChatMiddleware {
   readonly #presetPreprocessors: PresetPreprocessorFn[] = []
   readonly #replyProcessors: ReplyProcessorFn[] = []
 
-  readonly #commands: Array<{ command: RegExp[], permission: CommandOptions['permission'], callback: CommandCallback }> = []
+  readonly #commands: CommandRegistry = []
+  readonly #superCommands: CommandRegistry = []
 
   #llm?: LLM
 
@@ -107,19 +111,24 @@ class ChatMiddleware {
     return this
   }
 
-  addCommand (command: string | RegExp | Array<string | RegExp>, cb: CommandCallback, options: CommandOptions): this {
-    this.#commands.push({
-      command: (Array.isArray(command) ? command : [command]).map(cmd => {
-        if (typeof cmd === 'string') {
-          return new RegExp(`^${cmd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:$|\\s)`)
-        }
-        return cmd
-      }),
-      permission: options.permission,
-      callback: cb
-    })
-    return this
+  #createCommandRegistrar (commandRegistry: CommandRegistry): CommandRegistrar {
+    return (command, cb, options) => {
+      commandRegistry.push({
+        command: (Array.isArray(command) ? command : [command]).map(cmd => {
+          if (typeof cmd === 'string') {
+            return new RegExp(`^${cmd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:$|\\s)`)
+          }
+          return cmd
+        }),
+        permission: options.permission,
+        callback: cb
+      })
+      return this
+    }
   }
+
+  addCommand = this.#createCommandRegistrar(this.#commands)
+  addSuperCommand = this.#createCommandRegistrar(this.#superCommands)
 
   fork (): ChatMiddleware
   fork (handlers: Array<(mw: ChatMiddleware) => ChatMiddleware>): ChatMiddlewareForkedArray
@@ -167,10 +176,6 @@ class ChatMiddleware {
       const isGroup = event.message_type === 'group'
       const eventId = isGroup ? event.group_id : event.user_id
       const enableHit = this.#enabled.find(({ id, type }) => id === eventId && type === event.message_type)
-      if (enableHit === undefined) {
-        await next()
-        return
-      }
       const dbKey: DBKey = {
         history: `chatbot:${this.#id}:history:${event.message_type}_${eventId}`,
         isShutup: `chatbot:${this.#id}:shutup:${event.message_type}_${eventId}`,
@@ -196,27 +201,38 @@ class ChatMiddleware {
         await db.put(dbKey.history, newHistory)
         return [formerHistory, updatedHistoryPiece]
       }
-      // Handle Commands
-      const rawMessage = event.raw_message.trim()
-      for (const cmd of this.#commands) {
-        if (!cmd.command.some(reg => reg.test(rawMessage))) { continue }
-        if (cmd.permission === 'master' && !isFromMaster) {
-          send(textSegmentRequest('没有权限执行该命令'))
-          return
-        } else if (Array.isArray(cmd.permission) && !cmd.permission.includes(event.user_id) && !isFromMaster) {
-          send(textSegmentRequest('没有权限执行该命令'))
-          return
+      const handleCommands = async (commandRegistry: CommandRegistry): Promise<boolean> => {
+        const rawMessage = event.raw_message.trim()
+        for (const cmd of commandRegistry) {
+          if (!cmd.command.some(reg => reg.test(rawMessage))) { continue }
+          if (cmd.permission === 'master' && !isFromMaster) {
+            send(textSegmentRequest('没有权限执行该命令'))
+            return true
+          } else if (Array.isArray(cmd.permission) && !cmd.permission.includes(event.user_id) && !isFromMaster) {
+            send(textSegmentRequest('没有权限执行该命令'))
+            return true
+          }
+          const ctx: CommandCallbackCtx = {
+            ...mwCtx,
+            dbKey,
+            llm: this.#llm,
+            textSegmentRequest
+          }
+          const args = rawMessage.split(/\s/).slice(1).map(arg => arg.trim()).filter(arg => arg.length > 0)
+          await cmd.callback.call(this, ctx, args)
+          return true
         }
-        const ctx: CommandCallbackCtx = {
-          ...mwCtx,
-          dbKey,
-          llm: this.#llm,
-          textSegmentRequest
-        }
-        const args = rawMessage.split(/\s/).slice(1).map(arg => arg.trim()).filter(arg => arg.length > 0)
-        await cmd.callback.call(this, ctx, args)
+        return false
+      }
+      // Handle super commands
+      if (await handleCommands(this.#superCommands)) { return }
+      // Check if is hit
+      if (enableHit === undefined) {
+        await next()
         return
       }
+      // Handle Commands
+      if (await handleCommands(this.#commands)) { return }
       // Save the coming message to db
       const message = event.message.reduce<string[]>((acc, seg) => {
         if (seg.type === 'text') {

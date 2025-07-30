@@ -265,9 +265,31 @@ export const [fasongChatBot, fasong2ChatBot] =
         .enableGroup(313214094, { rate: 0.05, replyOnAt: true }) // 技术组
         .enableGroup(731198465, { rate: 0.4, replyOnAt: true }) // 528
         .enableGroup(860946981, { rate: 1, replyOnAt: true }) // yanggu
-        .enableGroup(718824969, { rate: 0.4, replyOnAt: true }) // 幼儿园
+        // .enableGroup(718824969, { rate: 0.4, replyOnAt: true }) // 幼儿园
         .enableGroup(959606149, { rate: 0.4, replyOnAt: true }) // 努力学习
         .enableGroup(321493792, { rate: 0.02, replyOnAt: true }) // 山下
+        .addSuperCommand(['#tempenable'],
+          async function ({ event, send, textSegmentRequest }, args) {
+            if (args.length < 1) {
+              send(textSegmentRequest('用法: #tempenable <rate>'))
+              return
+            }
+            const [rate] = args
+            const rateNum = parseFloat(rate)
+            if (event.post_type === 'message') {
+              if (event.message_type === 'group') {
+                const groupId = event.group_id
+                this.enableGroup(groupId, { rate: rateNum, replyOnAt: true })
+                send(textSegmentRequest(`已临时启用 group[${groupId}]，速率[${rateNum}]`))
+              } else {
+                const userId = event.user_id
+                this.enablePrivate(userId, { rate: rateNum })
+                send(textSegmentRequest(`已临时启用 private[${userId}]，速率[${rateNum}]`))
+              }
+            }
+          },
+          { permission: 'master' }
+        )
         .bubble,
       fork2 => fork2
         .useChatMode(ChatMode.SingleLineReply)
