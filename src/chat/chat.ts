@@ -40,6 +40,22 @@ type CommandRegistry = Array<{ command: RegExp[], permission: CommandOptions['pe
 
 type ChatMiddlewareForkedArray = ChatMiddleware[] & { buildAll: () => Middleware[] }
 
+type InstanceMethodTuple<T, Ex = never> = {
+  [Name in Exclude<keyof T, Ex>]: T[Name] extends (...args: Array<infer Arg>) => infer Return ? [Name, Arg[], Return] : never;
+}[Exclude<keyof T, Ex>]
+type ConstructionLogItem = InstanceMethodTuple<ChatMiddleware, 'recordConstructionLog'>
+// function constructionLog (target: any, propertyName: string | symbol, descriptor: PropertyDescriptor): void {
+//   const method = descriptor.value
+//   const that = target
+//   descriptor.value = function (...args: ConstructionLogItem): ConstructionLogItem[2] {
+//     that.recordConstructionLog([propertyName, args, method.apply(that, args)] as ConstructionLogItem)
+//     // console.log(`🔗 Chain: ${this._callChain.join(' -> ')}`)
+
+//     const result = method.apply(this, args)
+//     return result
+//   }
+// }
+
 class ChatMiddleware {
   constructor (id: string) {
     this.#id = id
@@ -61,6 +77,9 @@ class ChatMiddleware {
 
   #llm?: LLM
 
+  readonly #constructionLog: ConstructionLogItem[] = []
+
+  // @constructionLog
   usePreset (preset: Preset): this {
     this.#preset = preset.clone()
     return this
@@ -145,6 +164,8 @@ class ChatMiddleware {
       newMw.#presetPreprocessors.push(...this.#presetPreprocessors)
       newMw.#replyProcessors.push(...this.#replyProcessors)
       newMw.#commands.push(...this.#commands)
+      newMw.#superCommands.push(...this.#superCommands)
+      newMw.#constructionLog.push(...this.#constructionLog)
       return newMw
     }
     if (handlers === undefined) {
@@ -160,6 +181,10 @@ class ChatMiddleware {
       configurable: true
     })
     return arr as ChatMiddlewareForkedArray
+  }
+
+  recordConstructionLog (logItem: ConstructionLogItem): void {
+    this.#constructionLog.push(logItem)
   }
 
   get bubble (): this { return this }
