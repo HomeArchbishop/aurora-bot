@@ -132,14 +132,46 @@ async function sendVNRelease ({ date, isGroup, eventId }: SendVNReleaseOptions, 
           }))
         }
       }, () => {}, res => {
-        ctx.send({
-          action: isGroup ? 'send_group_msg' : 'send_private_msg',
-          params: {
-            user_id: eventId,
-            group_id: eventId,
-            message: `发送 VNDB 发布信息失败: ${res.message}`
-          }
-        })
+        // ctx.send({
+        //   action: isGroup ? 'send_group_msg' : 'send_private_msg',
+        //   params: {
+        //     user_id: eventId,
+        //     group_id: eventId,
+        //     message: `发送 VNDB 发布信息失败: ${res.message}`
+        //   }
+        // })
+        const chunkSize = 4
+        for (let j = 0; j < messages.slice(i, i + max).length; j += chunkSize) {
+          const chunk = messages.slice(i, i + max).slice(j, j + chunkSize)
+          ctx.send({
+            action: isGroup ? 'send_group_msg' : 'send_private_msg',
+            params: {
+              user_id: eventId,
+              group_id: eventId,
+              message: chunk.flatMap(msg => [
+                {
+                  type: 'text',
+                  data: {
+                    text: msg[0]
+                  }
+                },
+                msg[1][0] !== undefined
+                  ? {
+                      type: 'image',
+                      data: {
+                        file: msg[1][0]
+                      }
+                    }
+                  : {
+                      type: 'text',
+                      data: {
+                        text: '\n' + msg[1][1]
+                      }
+                    }
+              ])
+            }
+          })
+        }
       })
       Bun.sleepSync(1000)
     }
