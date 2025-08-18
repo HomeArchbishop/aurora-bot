@@ -265,7 +265,7 @@ export const [fasongChatBot, fasong2ChatBot] =
         .enableGroup(313214094, { rate: 0.05, replyOnAt: true }) // 技术组
         .enableGroup(731198465, { rate: 0.4, replyOnAt: true }) // 528
         .enableGroup(860946981, { rate: 1, replyOnAt: true }) // yanggu
-        // .enableGroup(718824969, { rate: 0.4, replyOnAt: true }) // 幼儿园
+        .enableGroup(718824969, { rate: 0.4, replyOnAt: true }) // 幼儿园
         .enableGroup(959606149, { rate: 0.4, replyOnAt: true }) // 努力学习
         .enableGroup(321493792, { rate: 0.02, replyOnAt: true }) // 山下
         .addSuperCommand(['#tempenable'],
