@@ -1,5 +1,5 @@
-declare namespace NodeJS {
-  interface ProcessEnv {
+declare module 'bun' {
+  interface Env {
     VERSION: string
     NAPCAT_WS_URL: string
     MASTER_ID: string
@@ -8,5 +8,6 @@ declare namespace NodeJS {
     CHATBOT_LLM_API_KEYS: string
     CHATBOT_FASONG_MASTER_ID: string
     CHATBOT_FASONG_MASTER_NAME: string
+    CHATBOT_GROUP_IDS: string
   }
 }
