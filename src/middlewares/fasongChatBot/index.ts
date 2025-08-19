@@ -3,6 +3,8 @@ import { LLM } from '../../llm/llm'
 import { refreshKeyCommand, shutupCommand } from './commands/chores'
 import { clearEquipmentCommand, countEquipmentCommand, equipCommand, listEquipmentCommand, unequipCommand } from './commands/equipments'
 import { clearHistoryCommand, cntHistoryCommand, delHistoryCommand, historyCommand } from './commands/history'
+import { presetPreProcessor } from './processors/presetPreProcessor'
+import { replyProcessor } from './processors/replyProcessor'
 import { tempEnableCommand } from './superCommands/tempenable'
 
 const preset = new Preset({
@@ -98,31 +100,9 @@ export const [fasongChatBot, fasong2ChatBot] =
     .useLLM(llm)
     .useMaster(Number(process.env.CHATBOT_FASONG_MASTER_ID))
     .setPresetHistoryInjectionCount(100)
-    .addPresetPreprocessor(async preset => {
-      preset.addReplaceOnce([/{{time_now}}/g, `${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}(24小时制)`])
-    })
-    .addReplyProcessor(async splits => {
-      const processedSplits = [] as typeof splits
-      for (const split of splits) {
-        if (typeof split !== 'string') {
-          processedSplits.push(split)
-          continue
-        }
-        const tools = [...split.matchAll(/\[tool="(.*?)"(.*?)\]/g)]
-        let finalStr = split
-        for (const tool of tools) {
-          const toolName = tool[1]
-          if (toolName === 'at') {
-            const atId = tool[2].match(/id="(.*?)"/)
-            if (atId !== null) {
-              finalStr = finalStr.replace(tool[0], `[CQ:at,qq=${atId[1]}]`)
-            }
-          }
-        }
-        processedSplits.push(finalStr)
-      }
-      return processedSplits
-    })
+
+    .addPresetPreprocessor(presetPreProcessor)
+    .addReplyProcessor(replyProcessor)
 
     .addCommand(clearHistoryCommand)
     .addCommand(historyCommand)

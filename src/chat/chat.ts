@@ -2,12 +2,12 @@ import { createMiddleware } from '../app'
 import { Preset } from './preset'
 import { type ApiRequest } from '../types/req'
 import { type LLM } from '../llm/llm'
-import { type DBKey, type Middleware } from './share.types'
+import { type DBKey, type Middleware, type ReplyRequestSplits } from './share.types'
 import {
   type CommandRegistrar, type CommandRegistry, type CommandCallbackCtx,
   createCommandRegistrar
 } from './command'
-
+import { type PresetPreprocessorFn, type ReplyProcessorFn } from './processor'
 interface EableGroupOptions { rate: number, replyOnAt: boolean }
 interface EablePrivateOptions { rate: number }
 
@@ -15,10 +15,6 @@ enum ChatMode {
   Normal,
   SingleLineReply
 }
-
-type ReplyRequestSplits = string | Omit<ApiRequest, 'echo'>
-type PresetPreprocessorFn = (preset: Preset) => Promise<void>
-type ReplyProcessorFn = (splits: ReplyRequestSplits[]) => Promise<ReplyRequestSplits[]>
 
 type ChatMiddlewareForkedArray = ChatMiddleware[] & { buildAll: () => Middleware[] }
 
