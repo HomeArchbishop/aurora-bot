@@ -17,7 +17,8 @@
     "@types/node": "^24.3.0",
     "@types/node-schedule": "^2.1.7",
     "@types/ws": "^8.18.0",
-    "eslint": "8"
+    "eslint": "^9.33.0",
+    "neostandard": "^0.12.2"
   },
   "scripts": {
     "start": "bun src/index.ts",
