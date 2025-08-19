@@ -13,8 +13,13 @@ type CommandCallback = (this: ChatMiddleware, ctx: CommandCallbackCtx, args: str
 interface CommandOptions {
   permission: 'master' | 'everyone' | number[]
 }
-type CommandRegistrar = (command: CommandPattern, cb: CommandCallback, options: CommandOptions) => ChatMiddleware
-type CommandRegistry = Array<{ command: RegExp[], permission: CommandOptions['permission'], callback: CommandCallback }>
+interface Command {
+  command: RegExp[]
+  permission: CommandOptions['permission']
+  callback: CommandCallback
+}
+type CommandRegistrar = (command: Command) => ChatMiddleware
+type CommandRegistry = Array<Command>
 
 /**
  * @internal
@@ -23,17 +28,8 @@ type CommandRegistry = Array<{ command: RegExp[], permission: CommandOptions['pe
  * @returns A command registrar function
  */
 function createCommandRegistrar (this: ChatMiddleware, commandRegistry: CommandRegistry): CommandRegistrar {
-  return (command, cb, options) => {
-    commandRegistry.push({
-      command: (Array.isArray(command) ? command : [command]).map(cmd => {
-        if (typeof cmd === 'string') {
-          return new RegExp(`^${cmd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:$|\\s)`)
-        }
-        return cmd
-      }),
-      permission: options.permission,
-      callback: cb
-    })
+  return (command) => {
+    commandRegistry.push(command)
     return this
   }
 }
@@ -46,11 +42,18 @@ function createCommandRegistrar (this: ChatMiddleware, commandRegistry: CommandR
  * @returns A command
  */
 function createCommand (
-  command: CommandPattern,
-  cb: CommandCallback,
-  options: CommandOptions
-): [CommandPattern, CommandCallback, CommandOptions] {
-  return [command, cb, options]
+  pattern: CommandPattern, cb: CommandCallback, options: CommandOptions
+): Command {
+  return {
+    command: (Array.isArray(pattern) ? pattern : [pattern]).map(cmd => {
+      if (typeof cmd === 'string') {
+        return new RegExp(`^${cmd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:$|\\s)`)
+      }
+      return cmd
+    }),
+    permission: options.permission,
+    callback: cb
+  }
 }
 
 export type {
