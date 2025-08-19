@@ -2,10 +2,11 @@ import { createMiddleware } from '../app'
 import { Preset } from './preset'
 import { type ApiRequest } from '../types/req'
 import { type LLM } from '../llm/llm'
-
-// Define types for the chat middleware, based on `typeof createMiddleware` function
-type Middleware = ReturnType<typeof createMiddleware>
-type MiddlewareCtx = Parameters<Middleware>[0]
+import { type DBKey, type Middleware } from './share.types'
+import {
+  type CommandRegistrar, type CommandRegistry, type CommandCallbackCtx,
+  createCommandRegistrar
+} from './command'
 
 interface EableGroupOptions { rate: number, replyOnAt: boolean }
 interface EablePrivateOptions { rate: number }
@@ -18,25 +19,6 @@ enum ChatMode {
 type ReplyRequestSplits = string | Omit<ApiRequest, 'echo'>
 type PresetPreprocessorFn = (preset: Preset) => Promise<void>
 type ReplyProcessorFn = (splits: ReplyRequestSplits[]) => Promise<ReplyRequestSplits[]>
-
-interface DBKey {
-  history: string
-  isShutup: string
-  equipment: string
-}
-
-type CommandPattern = string | RegExp | Array<string | RegExp>
-interface CommandCallbackCtx extends MiddlewareCtx {
-  dbKey: DBKey
-  llm?: LLM
-  textSegmentRequest: (str: string) => Omit<ApiRequest, 'echo'>
-}
-type CommandCallback = (this: ChatMiddleware, ctx: CommandCallbackCtx, args: string[]) => Promise<void>
-interface CommandOptions {
-  permission: 'master' | 'everyone' | number[]
-}
-type CommandRegistrar = (command: CommandPattern, cb: CommandCallback, options: CommandOptions) => ChatMiddleware
-type CommandRegistry = Array<{ command: RegExp[], permission: CommandOptions['permission'], callback: CommandCallback }>
 
 type ChatMiddlewareForkedArray = ChatMiddleware[] & { buildAll: () => Middleware[] }
 
@@ -137,30 +119,14 @@ class ChatMiddleware {
     return this
   }
 
-  #createCommandRegistrar (commandRegistry: CommandRegistry): CommandRegistrar {
-    return (command, cb, options) => {
-      commandRegistry.push({
-        command: (Array.isArray(command) ? command : [command]).map(cmd => {
-          if (typeof cmd === 'string') {
-            return new RegExp(`^${cmd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:$|\\s)`)
-          }
-          return cmd
-        }),
-        permission: options.permission,
-        callback: cb
-      })
-      return this
-    }
-  }
-
   @constructionLog
   addCommand (...args: Parameters<CommandRegistrar>): ReturnType<CommandRegistrar> {
-    return this.#createCommandRegistrar(this.#commands)(...args)
+    return createCommandRegistrar.call(this, this.#commands)(...args)
   }
 
   @constructionLog
   addSuperCommand (...args: Parameters<CommandRegistrar>): ReturnType<CommandRegistrar> {
-    return this.#createCommandRegistrar(this.#superCommands)(...args)
+    return createCommandRegistrar.call(this, this.#superCommands)(...args)
   }
 
   fork (): ChatMiddleware
