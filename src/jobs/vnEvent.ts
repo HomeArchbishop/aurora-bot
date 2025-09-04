@@ -1,5 +1,5 @@
 import { createJob } from '../app'
-import { sendVNRelease } from '../shared/sendVNDB'
+import { sendVNRelease } from '../services/vndb/sendVNDB'
 
 export const vnEvent = createJob('0 21 7 * * *', async (ctx) => {
   const date = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]

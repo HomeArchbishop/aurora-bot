@@ -1,5 +1,5 @@
 import { createMiddleware } from '../app'
-import { sendVNRelease } from '../shared/sendVNDB'
+import { sendVNRelease } from '../services/vndb/sendVNDB'
 
 export const vnReleaseEvent = createMiddleware(async (ctx, next) => {
   const event = ctx.event
