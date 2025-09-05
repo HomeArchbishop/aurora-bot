@@ -6,7 +6,7 @@ const formerRef: Record<'current', CvsDetail[] | null> = {
   current: null,
 }
 
-export const bingyanCvs = createJob('*/5 * * * * *', async (ctx) => {
+export const bingyanCvs = createJob('10 * * * *', async (ctx) => {
   const cvs = Cvs.getInstance()
   cvs.setAuthInfo(process.env.SERVICE_BINGYAN_CVS_USERNAME, process.env.SERVICE_BINGYAN_CVS_PASSWORD)
 
@@ -21,7 +21,6 @@ export const bingyanCvs = createJob('*/5 * * * * *', async (ctx) => {
   const increaseLines = []
 
   for (const item of detail) {
-    item.signup_count += 1
     const formerItem = formerRef.current.find(formerItem => formerItem.group_id === item.group_id)
     if (formerItem === undefined) { return }
     if (formerItem.signup_count !== item.signup_count) {
@@ -42,6 +41,14 @@ export const bingyanCvs = createJob('*/5 * * * * *', async (ctx) => {
     action: 'send_private_msg',
     params: {
       user_id: Number(process.env.MASTER_ID),
+      message: messageLines.join('\n'),
+    },
+  })
+
+  ctx.send({
+    action: 'send_group_msg',
+    params: {
+      group_id: Number(process.env.MISC_GROUP_ID_KINDERGARTEN),
       message: messageLines.join('\n'),
     },
   })

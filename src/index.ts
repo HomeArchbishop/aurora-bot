@@ -16,6 +16,7 @@ import { checkKeyStatus } from './middlewares/checkKeyStatus'
 import { ledger } from './webhooks/ledger'
 import { vnEvent } from './jobs/vnEvent'
 import { vnReleaseEvent } from './middlewares/vnReleaseEvent'
+import { bingyanCvs } from './jobs/bingyanCvs'
 // import { onlyEchoMeAndSendID } from './middlewares/onlyEchoMeAndSendID'
 // import { fasong2ChatBot } from './middlewares/fasong2ChatBot'
 // import { accelerateGif } from './middlewares/accelerateGif'
@@ -48,6 +49,8 @@ app
   /* teachermate */
   .useMw(tiichermateController)
   .useJob(...tiichermate)
+
+  .useJob(...bingyanCvs)
 
   /* chat bot */
   .useMw(fasongChatBot)
