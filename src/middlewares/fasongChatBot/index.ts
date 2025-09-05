@@ -10,7 +10,7 @@ import { tempEnableCommand } from './superCommands/tempenable'
 
 const llm = new LLM({
   apiHost: process.env.LLM_API_HOST,
-  keys: process.env.LLM_API_KEYS.split(','),
+  keys: process.env.LLM_API_KEYS.split(',').map(key => key.trim()),
   // model: 'deepseek-chat',
   // model: 'deepseek-ai/DeepSeek-R1-Distill-Qwen-32B'
   model: 'deepseek-ai/DeepSeek-V3',
@@ -45,19 +45,19 @@ export const [fasongChatBot, fasong2ChatBot] =
     .fork([
       fork1 => fork1
         .enablePrivate(Number(process.env.MASTER_ID))
-        .enableGroup(575306521, { rate: 0.03, replyOnAt: true }) // 牌社
-        .enableGroup(979962413, { rate: 1, replyOnAt: true }) // abc
-        .enableGroup(313214094, { rate: 0.05, replyOnAt: true }) // 技术组
-        .enableGroup(731198465, { rate: 0.4, replyOnAt: true }) // 528
-        .enableGroup(860946981, { rate: 1, replyOnAt: true }) // yanggu
-        .enableGroup(718824969, { rate: 0.4, replyOnAt: true }) // 幼儿园
-        .enableGroup(959606149, { rate: 0.4, replyOnAt: true }) // 努力学习
-        .enableGroup(321493792, { rate: 0.02, replyOnAt: true }) // 山下
+        .enableGroup(Number(process.env.MISC_GROUP_ID_PAISHE), { rate: 0.03, replyOnAt: true }) // 牌社
+        .enableGroup(Number(process.env.MISC_GROUP_ID_ABC), { rate: 1, replyOnAt: true }) // abc
+        .enableGroup(Number(process.env.MISC_GROUP_ID_JISHUZU), { rate: 0.05, replyOnAt: true }) // 技术组
+        .enableGroup(Number(process.env.MISC_GROUP_ID_528), { rate: 0.4, replyOnAt: true }) // 528
+        .enableGroup(Number(process.env.MISC_GROUP_ID_YANGGU), { rate: 1, replyOnAt: true }) // yanggu
+        .enableGroup(Number(process.env.MISC_GROUP_ID_KINDERGARTEN), { rate: 0.4, replyOnAt: true }) // 幼儿园
+        .enableGroup(Number(process.env.MISC_GROUP_ID_NULIXUEXI), { rate: 0.4, replyOnAt: true }) // 努力学习
+        .enableGroup(Number(process.env.MISC_GROUP_ID_SHANXIA), { rate: 0.02, replyOnAt: true }) // 山下
         .addSuperCommand(tempEnableCommand)
         .bubble,
       fork2 => fork2
         .useChatMode(ChatMode.SingleLineReply)
-        .enableGroup(1051443446, { rate: 0.02, replyOnAt: true }) // 家园&冰岩
+        .enableGroup(Number(process.env.MISC_GROUP_ID_JIAYUAN), { rate: 0.02, replyOnAt: true }) // 家园&冰岩
         .bubble,
     ])
     .buildAll()
