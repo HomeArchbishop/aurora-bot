@@ -5,9 +5,9 @@ export const checkKeyStatus = createMiddleware(async (ctx, next) => {
   const event = ctx.event
   if (event.post_type === 'message' && event.message_type === 'private') {
     if (event.user_id === Number(process.env.MASTER_ID) && ['keys', 'key'].includes(event.raw_message)) {
-      const keys = process.env.CHATBOT_LLM_API_KEYS.split(',')
+      const keys = process.env.LLM_API_KEYS.split(',')
       const llm = new LLM({
-        apiHost: process.env.CHATBOT_LLM_API_HOST,
+        apiHost: process.env.LLM_API_HOST,
         keys,
         model: '',
       })

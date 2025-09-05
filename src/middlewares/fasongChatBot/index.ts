@@ -9,8 +9,8 @@ import { replyProcessor } from './processors/replyProcessor'
 import { tempEnableCommand } from './superCommands/tempenable'
 
 const llm = new LLM({
-  apiHost: process.env.CHATBOT_LLM_API_HOST,
-  keys: process.env.CHATBOT_LLM_API_KEYS.split(','),
+  apiHost: process.env.LLM_API_HOST,
+  keys: process.env.LLM_API_KEYS.split(','),
   // model: 'deepseek-chat',
   // model: 'deepseek-ai/DeepSeek-R1-Distill-Qwen-32B'
   model: 'deepseek-ai/DeepSeek-V3',
