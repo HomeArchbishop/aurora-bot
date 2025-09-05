@@ -33,11 +33,11 @@ export const accelerateGif = createMiddleware(async (ctx, next) => {
           {
             type: 'image',
             data: {
-              file: `base64://${Buffer.from(newBuffer).toString('base64')}`
-            }
-          }
-        ]
-      }
+              file: `base64://${Buffer.from(newBuffer).toString('base64')}`,
+            },
+          },
+        ],
+      },
     })
     return
   }

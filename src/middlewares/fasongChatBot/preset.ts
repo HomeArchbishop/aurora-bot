@@ -73,8 +73,8 @@ const preset = new Preset({
     [/{{gender}}/g, '女'],
     [/{{pronoun}}/g, '她'],
     [/{{master}}/g, `id=${process.env.CHATBOT_FASONG_MASTER_ID}`],
-    [/{{master_name}}/g, process.env.CHATBOT_FASONG_MASTER_NAME]
-  ]
+    [/{{master_name}}/g, process.env.CHATBOT_FASONG_MASTER_NAME],
+  ],
 })
 
 export default preset

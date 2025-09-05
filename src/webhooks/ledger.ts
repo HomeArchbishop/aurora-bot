@@ -8,8 +8,8 @@ export const ledger = createWebhook('ledger', async (ctx) => {
       action: 'send_private_msg',
       params: {
         user_id: Number(process.env.MASTER_ID),
-        message: '缺少 amount 参数'
-      }
+        message: '缺少 amount 参数',
+      },
     })
     return
   }
@@ -19,8 +19,8 @@ export const ledger = createWebhook('ledger', async (ctx) => {
       action: 'send_private_msg',
       params: {
         user_id: Number(process.env.MASTER_ID),
-        message: 'amount 参数必须是一个数字'
-      }
+        message: 'amount 参数必须是一个数字',
+      },
     })
     return
   }
@@ -28,7 +28,7 @@ export const ledger = createWebhook('ledger', async (ctx) => {
     action: 'send_private_msg',
     params: {
       user_id: Number(process.env.MASTER_ID),
-      message: `已记录金额: ${amount.toFixed(2)} 元`
-    }
+      message: `已记录金额: ${amount.toFixed(2)} 元`,
+    },
   })
 })

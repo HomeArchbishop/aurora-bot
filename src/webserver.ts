@@ -58,12 +58,12 @@ class WebhookServer {
               return new Response('Webhook processing error: ' + String(err), { status: 500 })
             }
             return new Response('Webhook processed successfully', { status: 200 })
-          }
-        }
+          },
+        },
       },
       fetch () {
         return new Response('Not Found', { status: 404 })
-      }
+      },
     })
     this.#isStarted = true
   }

@@ -35,7 +35,7 @@ async function getReleaseInfo ({ date, page = 1 }: ReleaseInfoByDateOptions): Pr
   const response = await fetch('https://api.vndb.org/kana/release', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       filters,
@@ -43,8 +43,8 @@ async function getReleaseInfo ({ date, page = 1 }: ReleaseInfoByDateOptions): Pr
       sort: 'released',
       results: 100,
       page,
-      count: true
-    })
+      count: true,
+    }),
   })
 
   if (!response.ok) {
@@ -98,7 +98,7 @@ async function getVnInfo ({ date, id, page = 1 }: VnInfoOptions): Promise<VnInfo
   const response = await fetch('https://api.vndb.org/kana/vn', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       filters,
@@ -106,8 +106,8 @@ async function getVnInfo ({ date, id, page = 1 }: VnInfoOptions): Promise<VnInfo
       sort: 'released',
       results: 100,
       page,
-      count: true
-    })
+      count: true,
+    }),
   })
 
   if (!response.ok) {
@@ -118,5 +118,5 @@ async function getVnInfo ({ date, id, page = 1 }: VnInfoOptions): Promise<VnInfo
 }
 
 export {
-  getReleaseInfo, getVnInfo
+  getReleaseInfo, getVnInfo,
 }

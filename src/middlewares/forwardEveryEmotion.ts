@@ -8,8 +8,8 @@ export const forwardEveryEmotion = createMiddleware(async (ctx, next) => {
       action: 'send_private_msg',
       params: {
         user_id: Number(process.env.MASTER_ID),
-        message: `from ${from} ${event.raw_message}`
-      }
+        message: `from ${from} ${event.raw_message}`,
+      },
     })
     return
   }

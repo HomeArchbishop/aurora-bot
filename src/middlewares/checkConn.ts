@@ -8,8 +8,8 @@ export const checkConn = createMiddleware(async (ctx, next) => {
         action: 'send_private_msg',
         params: {
           user_id: event.user_id,
-          message: 'pong!'
-        }
+          message: 'pong!',
+        },
       })
       // await next()
       return

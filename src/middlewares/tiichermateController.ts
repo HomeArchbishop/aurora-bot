@@ -11,8 +11,8 @@ export const tiichermateController = createMiddleware(async (ctx, next) => {
           action: 'send_private_msg',
           params: {
             user_id: event.user_id,
-            message: 'openid/api未找到'
-          }
+            message: 'openid/api未找到',
+          },
         })
         await next()
         return
@@ -23,8 +23,8 @@ export const tiichermateController = createMiddleware(async (ctx, next) => {
         action: 'send_private_msg',
         params: {
           user_id: event.user_id,
-          message: `已注册\n[openid] ${openid}\n[api] ${api}`
-        }
+          message: `已注册\n[openid] ${openid}\n[api] ${api}`,
+        },
       })
       await next()
       return
@@ -36,8 +36,8 @@ export const tiichermateController = createMiddleware(async (ctx, next) => {
         action: 'send_private_msg',
         params: {
           user_id: event.user_id,
-          message: '已注销tiichemate'
-        }
+          message: '已注销tiichemate',
+        },
       })
     }
   }

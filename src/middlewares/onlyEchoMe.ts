@@ -8,8 +8,8 @@ export const onlyEchoMe = createMiddleware(async (ctx, next) => {
         action: 'send_private_msg',
         params: {
           user_id: event.user_id,
-          message: '你是不是说了:' + event.raw_message
-        }
+          message: '你是不是说了:' + event.raw_message,
+        },
       })
       await next()
       return

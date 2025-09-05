@@ -9,7 +9,7 @@ export const checkKeyStatus = createMiddleware(async (ctx, next) => {
       const llm = new LLM({
         apiHost: process.env.CHATBOT_LLM_API_HOST,
         keys,
-        model: ''
+        model: '',
       })
       const status = await Promise.allSettled(keys.map(async (key, i) => {
         try {
@@ -17,7 +17,7 @@ export const checkKeyStatus = createMiddleware(async (ctx, next) => {
           return {
             keyIndex: i,
             key: key.slice(0, 6),
-            balance: usage.balance ?? '/'
+            balance: usage.balance ?? '/',
           }
         } catch (err: any) {
           throw new Error(String(err.message ?? err))
@@ -36,9 +36,9 @@ export const checkKeyStatus = createMiddleware(async (ctx, next) => {
               }
               const error = s.reason as Error
               return `${i}\t${keys[i]}\tError - ${error.message}`
-            })
-          ].join('\n')
-        }
+            }),
+          ].join('\n'),
+        },
       })
       // await next()
       return

@@ -10,7 +10,7 @@ interface LLMOptions {
 }
 
 enum LLM_PLATFORM {
-  SILICONFLOW
+  SILICONFLOW,
 }
 
 interface LLMUsage {
@@ -28,7 +28,7 @@ class LLM {
     model,
     temperature = 0.7,
     topP = 1.0,
-    additionalHeaders = {}
+    additionalHeaders = {},
   }: LLMOptions) {
     this.#apiHost = apiHost
     this.#keys = keys
@@ -39,7 +39,7 @@ class LLM {
     // Do initialization
     Promise.allSettled([
       // Initialize key status
-      this.refreshKeyStatus()
+      this.refreshKeyStatus(),
     ])
       .then(() => {
         // Mark the LLM as initialized
@@ -93,15 +93,15 @@ class LLM {
           Accept: 'application/json',
           Authorization: `Bearer ${key}`,
           'Content-Type': 'application/json',
-          ...this.#additionalHeaders
+          ...this.#additionalHeaders,
         },
         data: {
           model: this.#model,
           messages,
           stream: false,
           temperature: this.#temperature,
-          top_p: this.#topP
-        }
+          top_p: this.#topP,
+        },
       })
       return resp.data.choices[0].message.content.trim()
     } catch (err: any) {
@@ -123,7 +123,7 @@ class LLM {
       throw new Error(`No key found for index ${keyIndex}`)
     }
     const url = {
-      [LLM_PLATFORM.SILICONFLOW]: this.#buildURL('/v1/user/info')
+      [LLM_PLATFORM.SILICONFLOW]: this.#buildURL('/v1/user/info'),
     }[this.#platform]
     if (url === undefined) {
       throw new Error(`Unsupported platform: ${this.#platform}`)
@@ -136,14 +136,14 @@ class LLM {
           Accept: 'application/json',
           Authorization: `Bearer ${key}`,
           'Content-Type': 'application/json',
-          ...this.#additionalHeaders
-        }
+          ...this.#additionalHeaders,
+        },
       })
       if (this.#platform === LLM_PLATFORM.SILICONFLOW) {
         return {
           keyIndex,
           key,
-          balance: `${resp.data.data.balance}r`
+          balance: `${resp.data.data.balance}r`,
         }
       }
       throw new Error('')
@@ -175,7 +175,7 @@ class LLM {
       model: this.#model,
       temperature: this.#temperature,
       topP: this.#topP,
-      additionalHeaders: { ...this.#additionalHeaders }
+      additionalHeaders: { ...this.#additionalHeaders },
     })
   }
 }

@@ -42,7 +42,7 @@ function createCommandRegistrar (this: ChatMiddleware, commandRegistry: CommandR
  * @returns A command
  */
 function createCommand (
-  pattern: CommandPattern, cb: CommandCallback, options: CommandOptions
+  pattern: CommandPattern, cb: CommandCallback, options: CommandOptions,
 ): Command {
   return {
     command: (Array.isArray(pattern) ? pattern : [pattern]).map(cmd => {
@@ -52,15 +52,15 @@ function createCommand (
       return cmd
     }),
     permission: options.permission,
-    callback: cb
+    callback: cb,
   }
 }
 
 export type {
-  CommandCallbackCtx, CommandRegistrar, CommandRegistry
+  CommandCallbackCtx, CommandRegistrar, CommandRegistry,
 }
 
 export {
   createCommandRegistrar, // internal
-  createCommand
+  createCommand,
 }

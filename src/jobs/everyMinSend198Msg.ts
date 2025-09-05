@@ -5,7 +5,7 @@ export const everyMinSend198Msg = createJob('* * * * *', async (ctx) => {
     action: 'send_private_msg',
     params: {
       user_id: Number(process.env.MASTER_ID),
-      message: '每分钟发送一次消息'
-    }
+      message: '每分钟发送一次消息',
+    },
   })
 })

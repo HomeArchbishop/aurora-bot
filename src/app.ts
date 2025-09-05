@@ -18,7 +18,7 @@ interface AppOptions {
 }
 
 type ApiResCallback<
-  S extends ApiResponseStatus = ApiResponseStatus, T extends ApiActionName = ApiActionName
+  S extends ApiResponseStatus = ApiResponseStatus, T extends ApiActionName = ApiActionName,
 > = (res: Omit<ApiResponse<S, T>, 'echo'>) => void
 
 interface CtxSend {
@@ -59,7 +59,7 @@ class App {
     this.#ctxSend = <T extends ApiActionName>(
       req: Omit<ApiRequest<T>, 'echo'>,
       resOkCb?: ApiResCallback<ApiResponseStatus.OK, T>,
-      resFailedCb?: ApiResCallback<ApiResponseStatus.FAILED, T>
+      resFailedCb?: ApiResCallback<ApiResponseStatus.FAILED, T>,
     ): void => {
       const hash = Math.random().toString(36).slice(2, 10)
       const echoReq = { ...req, echo: hash }
@@ -79,7 +79,7 @@ class App {
   readonly #db: Level<string, string>
   readonly #jobs: Job[] = []
   readonly #middlewares: Middleware[] = [
-    async (_, next) => { await next() }
+    async (_, next) => { await next() },
   ]
 
   readonly #apiResCallbacks =

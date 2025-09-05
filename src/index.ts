@@ -25,7 +25,7 @@ const app = new App({
   logger,
   db,
   webhookServerPort: 10721,
-  webhookToken: process.env.WEBHOOK_TOKEN
+  webhookToken: process.env.WEBHOOK_TOKEN,
 })
 
 app

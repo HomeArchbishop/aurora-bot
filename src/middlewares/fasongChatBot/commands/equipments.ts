@@ -13,7 +13,7 @@ export const equipCommand = createCommand(['#equip', '#eq'],
     await db.put(dbKey.equipment, Array.from(set).join(','))
     send(textSegmentRequest(`已装备: ${Array.from(set).join(',')}`))
   },
-  { permission: 'everyone' }
+  { permission: 'everyone' },
 )
 
 export const unequipCommand = createCommand(['#unequip', '#uneq'],
@@ -25,7 +25,7 @@ export const unequipCommand = createCommand(['#unequip', '#uneq'],
     await db.put(dbKey.equipment, Array.from(set).join(','))
     send(textSegmentRequest(`卸下装备: ${equipment.join(',')}`))
   },
-  { permission: 'everyone' }
+  { permission: 'everyone' },
 )
 
 export const clearEquipmentCommand = createCommand(['#cleareq', '#clreq'],
@@ -33,7 +33,7 @@ export const clearEquipmentCommand = createCommand(['#cleareq', '#clreq'],
     await db.del(dbKey.equipment)
     send(textSegmentRequest('已清除装备列表'))
   },
-  { permission: 'everyone' }
+  { permission: 'everyone' },
 )
 
 export const countEquipmentCommand = createCommand('#cnteq',
@@ -41,7 +41,7 @@ export const countEquipmentCommand = createCommand('#cnteq',
     const cnt = (db.getSync(dbKey.equipment)?.split(',') ?? []).length
     send(textSegmentRequest(`当前装备数量: ${cnt}`))
   },
-  { permission: 'everyone' }
+  { permission: 'everyone' },
 )
 
 export const listEquipmentCommand = createCommand('#lseq',
@@ -53,5 +53,5 @@ export const listEquipmentCommand = createCommand('#lseq',
     }
     send(textSegmentRequest(`当前装备列表: ${equipment}`))
   },
-  { permission: 'master' }
+  { permission: 'master' },
 )

@@ -5,7 +5,7 @@ export const sendHi = createWebhook('sendhi', async (ctx) => {
     action: 'send_private_msg',
     params: {
       user_id: Number(process.env.MASTER_ID),
-      message: 'hi'
-    }
+      message: 'hi',
+    },
   })
 })

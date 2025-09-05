@@ -15,7 +15,7 @@ export const shutupCommand = createCommand(['#shutup', '#ballgag'],
       send(textSegmentRequest('已禁言'))
     }
   },
-  { permission: 'everyone' }
+  { permission: 'everyone' },
 )
 
 export const refreshKeyCommand = createCommand(['#refreshkey', '#key'],
@@ -29,9 +29,9 @@ export const refreshKeyCommand = createCommand(['#refreshkey', '#key'],
     send(textSegmentRequest(
       '已检查 keys 状态\n' +
       keyStatus.map((status, i) =>
-        `#${i.toString().padEnd(4, ' ')}\t${status === 'ok' ? '✅' : status === 'bad' ? '❌' : '❓'}`
-      ).join('\n')
+        `#${i.toString().padEnd(4, ' ')}\t${status === 'ok' ? '✅' : status === 'bad' ? '❌' : '❓'}`,
+      ).join('\n'),
     ))
   },
-  { permission: 'master' }
+  { permission: 'master' },
 )

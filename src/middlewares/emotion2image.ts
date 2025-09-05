@@ -22,7 +22,7 @@ export const emotion2image = createMiddleware(async (ctx, next) => {
       action: 'send_private_msg',
       params: {
         user_id: Number(process.env.MASTER_ID),
-        message: imageUrls.map(url => ({ type: 'text', data: { text: url } }))
+        message: imageUrls.map(url => ({ type: 'text', data: { text: url } })),
         // message: imageSeg.map((seg, i) => {
         //   const settleResult = pending[i]
         //   if (settleResult.status === 'rejected') {
@@ -40,7 +40,7 @@ export const emotion2image = createMiddleware(async (ctx, next) => {
         //     }
         //   }
         // })
-      }
+      },
     })
     return
   }

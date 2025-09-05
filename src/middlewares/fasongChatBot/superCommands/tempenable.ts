@@ -24,5 +24,5 @@ export const tempEnableCommand = createCommand(['#tempenable'],
       }
     }
   },
-  { permission: 'master' }
+  { permission: 'master' },
 )

@@ -8,8 +8,8 @@ export const checkVersion = createMiddleware(async (ctx, next) => {
         action: 'send_private_msg',
         params: {
           user_id: event.user_id,
-          message: `version: ${process.env.VERSION}\nbuild time: ${process.env.BUILD_TIME}`
-        }
+          message: `version: ${process.env.VERSION}\nbuild time: ${process.env.BUILD_TIME}`,
+        },
       })
       // await next()
       return

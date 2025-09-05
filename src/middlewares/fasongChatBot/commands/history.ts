@@ -9,7 +9,7 @@ export const clearHistoryCommand = createCommand(['#clearhistory', '#clrhistory'
     await db.del(dbKey.history)
     send(textSegmentRequest('已清除历史记录'))
   },
-  { permission: 'master' }
+  { permission: 'master' },
 )
 
 export const historyCommand = createCommand('#history',
@@ -21,7 +21,7 @@ export const historyCommand = createCommand('#history',
     }
     send(textSegmentRequest(formerHistory.split(/\n/).slice(-50).join('\n')))
   },
-  { permission: 'master' }
+  { permission: 'master' },
 )
 
 export const delHistoryCommand = createCommand('#delhistory',
@@ -42,7 +42,7 @@ export const delHistoryCommand = createCommand('#delhistory',
     newHistory.split('\n').filter(line => line.trim().length !== 0).length
     send(textSegmentRequest(`已删去包含/${regexStr}/的历史记录 ${deletedCount} 条`))
   },
-  { permission: 'master' }
+  { permission: 'master' },
 )
 
 export const cntHistoryCommand = createCommand('#cnthistory',
@@ -64,5 +64,5 @@ export const cntHistoryCommand = createCommand('#cnthistory',
       .length
     send(textSegmentRequest(`查询到包含/${regexStr}/的历史记录 ${cnt} 条`))
   },
-  { permission: 'everyone' }
+  { permission: 'everyone' },
 )

@@ -8,7 +8,7 @@ function getFlagEmoji (countryCode: string): string {
     'zh-Hant': '🇭🇰',
     en: '🇬🇧',
     kr: '🇰🇷',
-    ru: '🇷🇺'
+    ru: '🇷🇺',
   }[countryCode] ?? countryCode
 }
 
@@ -21,10 +21,10 @@ interface SendVNReleaseOptions {
 async function sendVNRelease ({ date, isGroup, eventId }: SendVNReleaseOptions, ctx: Parameters<ReturnType<typeof createMiddleware> | ReturnType<typeof createJob>[1]>[0]): Promise<void> {
   try {
     const releaseInfo = await getReleaseInfo({
-      date
+      date,
     })
     const vnInfo = await getVnInfo({
-      date
+      date,
     })
     const releaseResults = releaseInfo.results
     const vnResults = vnInfo.results
@@ -77,8 +77,8 @@ async function sendVNRelease ({ date, isGroup, eventId }: SendVNReleaseOptions, 
         }).join('\n'),
         [
           imgChecker(vn) ? vn.image?.thumbnail : undefined,
-          imgTip(vn)
-        ]
+          imgTip(vn),
+        ],
       ])
     }
 
@@ -91,8 +91,8 @@ async function sendVNRelease ({ date, isGroup, eventId }: SendVNReleaseOptions, 
         `开发: ${vn.developers.map(dev => dev.name).join(', ')}\n`,
         [
           imgChecker(vn) ? vn.image?.thumbnail : undefined,
-          imgTip(vn)
-        ]
+          imgTip(vn),
+        ],
       ])
     }
 
@@ -111,26 +111,26 @@ async function sendVNRelease ({ date, isGroup, eventId }: SendVNReleaseOptions, 
                 {
                   type: 'text',
                   data: {
-                    text: message[0]
-                  }
+                    text: message[0],
+                  },
                 },
                 message[1][0] !== undefined
                   ? {
                       type: 'image',
                       data: {
-                        file: message[1][0]
-                      }
+                        file: message[1][0],
+                      },
                     }
                   : {
                       type: 'text',
                       data: {
-                        text: '\n' + message[1][1]
-                      }
-                    }
-              ]
-            }
-          }))
-        }
+                        text: '\n' + message[1][1],
+                      },
+                    },
+              ],
+            },
+          })),
+        },
       }, () => {}, res => {
         // ctx.send({
         //   action: isGroup ? 'send_group_msg' : 'send_private_msg',
@@ -152,24 +152,24 @@ async function sendVNRelease ({ date, isGroup, eventId }: SendVNReleaseOptions, 
                 {
                   type: 'text',
                   data: {
-                    text: msg[0]
-                  }
+                    text: msg[0],
+                  },
                 },
                 msg[1][0] !== undefined
                   ? {
                       type: 'image',
                       data: {
-                        file: msg[1][0]
-                      }
+                        file: msg[1][0],
+                      },
                     }
                   : {
                       type: 'text',
                       data: {
-                        text: '\n' + msg[1][1]
-                      }
-                    }
-              ])
-            }
+                        text: '\n' + msg[1][1],
+                      },
+                    },
+              ]),
+            },
           })
         }
       })
@@ -181,8 +181,8 @@ async function sendVNRelease ({ date, isGroup, eventId }: SendVNReleaseOptions, 
       params: {
         user_id: eventId,
         group_id: eventId,
-        message: `获取VNDB发布信息失败: ${err.message}`
-      }
+        message: `获取VNDB发布信息失败: ${err.message}`,
+      },
     })
   }
 }

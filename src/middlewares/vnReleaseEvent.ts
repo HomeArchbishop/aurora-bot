@@ -19,8 +19,8 @@ export const vnReleaseEvent = createMiddleware(async (ctx, next) => {
         params: {
           user_id: eventId,
           group_id: eventId,
-          message: '日期格式错误，请使用 YYYYMMDD 格式'
-        }
+          message: '日期格式错误，请使用 YYYYMMDD 格式',
+        },
       })
       return
     }
@@ -29,8 +29,8 @@ export const vnReleaseEvent = createMiddleware(async (ctx, next) => {
       params: {
         user_id: eventId,
         group_id: eventId,
-        message: `正在获取 ${date} 的发布信息，请稍候...`
-      }
+        message: `正在获取 ${date} 的发布信息，请稍候...`,
+      },
     })
     await sendVNRelease({ date, isGroup, eventId }, ctx)
     return

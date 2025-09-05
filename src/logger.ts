@@ -8,7 +8,7 @@ const dailyTransport = new winston.transports.DailyRotateFile({
   datePattern: 'YYYY-MM-DD-HH',
   zippedArchive: true,
   maxSize: '20m',
-  maxFiles: '14d'
+  maxFiles: '14d',
 })
 
 const logger = winston.createLogger({
@@ -18,12 +18,12 @@ const logger = winston.createLogger({
     format.align(),
     format.printf(({ level, message, timestamp }) => {
       return `${timestamp as string} ${level}:${message as string}`
-    })
+    }),
   ),
   transports: [
     new transports.Console(),
-    dailyTransport
-  ]
+    dailyTransport,
+  ],
 })
 
 export { logger }

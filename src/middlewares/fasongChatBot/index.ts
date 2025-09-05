@@ -15,7 +15,7 @@ const llm = new LLM({
   // model: 'deepseek-ai/DeepSeek-R1-Distill-Qwen-32B'
   model: 'deepseek-ai/DeepSeek-V3',
   temperature: 1.3,
-  topP: 0.8
+  topP: 0.8,
 })
 
 export const [fasongChatBot, fasong2ChatBot] =
@@ -58,6 +58,6 @@ export const [fasongChatBot, fasong2ChatBot] =
       fork2 => fork2
         .useChatMode(ChatMode.SingleLineReply)
         .enableGroup(1051443446, { rate: 0.02, replyOnAt: true }) // 家园&冰岩
-        .bubble
+        .bubble,
     ])
     .buildAll()

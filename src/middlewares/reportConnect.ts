@@ -7,8 +7,8 @@ export const reportConnect = createMiddleware(async (ctx, next) => {
       action: 'send_private_msg',
       params: {
         user_id: Number(process.env.MASTER_ID),
-        message: 'connected喵'
-      }
+        message: 'connected喵',
+      },
     })
   }
   await next()

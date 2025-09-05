@@ -5,7 +5,7 @@ import { type LLM } from '../llm/llm'
 import { type DBKey, type Middleware, type ReplyRequestSplits } from './share.types'
 import {
   type CommandRegistrar, type CommandRegistry, type CommandCallbackCtx,
-  createCommandRegistrar
+  createCommandRegistrar,
 } from './command'
 import { type PresetPreprocessorFn, type ReplyProcessorFn } from './processor'
 interface EableGroupOptions { rate: number, replyOnAt: boolean }
@@ -13,7 +13,7 @@ interface EablePrivateOptions { rate: number }
 
 enum ChatMode {
   Normal,
-  SingleLineReply
+  SingleLineReply,
 }
 
 type ChatMiddlewareForkedArray = ChatMiddleware[] & { buildAll: () => Middleware[] }
@@ -156,7 +156,7 @@ class ChatMiddleware {
       },
       writable: false,
       enumerable: false,
-      configurable: true
+      configurable: true,
     })
     return arr as ChatMiddlewareForkedArray
   }
@@ -182,7 +182,7 @@ class ChatMiddleware {
       const dbKey: DBKey = {
         history: `chatbot:${this.#id}:history:${event.message_type}_${eventId}`,
         isShutup: `chatbot:${this.#id}:shutup:${event.message_type}_${eventId}`,
-        equipment: `chatbot:${this.#id}:equipment:${event.message_type}_${eventId}`
+        equipment: `chatbot:${this.#id}:equipment:${event.message_type}_${eventId}`,
       }
       const isShutup = db.getSync(dbKey.isShutup) === 'true'
       // Define tool functions
@@ -190,8 +190,8 @@ class ChatMiddleware {
         action: event.message_type === 'group' ? 'send_group_msg' : 'send_private_msg',
         params: {
           [event.message_type === 'group' ? 'group_id' : 'user_id']: eventId,
-          message: str
-        }
+          message: str,
+        },
       })
       const updateHistoryToDb = async (comingMsg: string, isSelf: boolean): Promise<[string, string]> => {
         const formerHistory = db.getSync(dbKey.history) ?? ''
@@ -219,7 +219,7 @@ class ChatMiddleware {
             ...mwCtx,
             dbKey,
             llm: this.#llm,
-            textSegmentRequest
+            textSegmentRequest,
           }
           const args = rawMessage.split(/\s/).slice(1).map(arg => arg.trim()).filter(arg => arg.length > 0)
           await cmd.callback.call(this, ctx, args)
@@ -269,11 +269,11 @@ class ChatMiddleware {
         }
         const replyString = await this.#llm.completions([
           { role: 'system', content: preset.prompt },
-          { role: 'user', content: updatedHistoryPiece }
+          { role: 'user', content: updatedHistoryPiece },
         ])
         const splits = await this.#replyProcessors.reduce<Promise<ReplyRequestSplits[]>>(
           async (acc, processor) => await acc.then(async res => await processor(res)),
-          Promise.resolve(replyString.split('\n').map(l => l.trim()).filter(l => l.length > 0))
+          Promise.resolve(replyString.split('\n').map(l => l.trim()).filter(l => l.length > 0)),
         )
           .then(res => res.map(split =>
             typeof split === 'string' ? split.split('\n').map(l => l.trim()).filter(l => l.length > 0) : split))
@@ -311,5 +311,5 @@ class ChatMiddleware {
 
 export {
   ChatMiddleware,
-  ChatMode
+  ChatMode,
 }
