@@ -3,7 +3,6 @@ import type winston from 'winston'
 import WebSocket from 'ws'
 import type { ApiRequest, ApiActionName } from './types/req'
 import type { WsEvent } from './types/event'
-import path from 'path'
 import { existsSync, mkdirSync } from 'fs'
 import type { ApiResponseStatus, ApiResponse } from './types/res'
 import { WebhookServer, type WebhookTriggerCtx } from './webserver'
@@ -16,6 +15,7 @@ interface AppOptions {
   db: Db
   webhookServerPort?: number
   webhookToken?: string
+  tempdir: string
 }
 
 type ApiResCallback<
@@ -45,13 +45,14 @@ type Job = (ctx: JobCtx) => Promise<void>
 type Webhook = (ctx: WebhookCtx) => Promise<void>
 
 class App {
-  constructor ({ url, token, logger, db, webhookServerPort = 3000, webhookToken }: AppOptions) {
+  constructor ({ url, token, logger, db, webhookServerPort = 3000, webhookToken, tempdir }: AppOptions) {
     this.#logger = logger
     this.#ws = new WebSocket(url, {
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
       },
     })
+    this.#tempdir = tempdir
     this.#db = db
     this.#webhookServer.setPort(webhookServerPort).setToken(webhookToken)
 
@@ -91,7 +92,7 @@ class App {
     new Map<string, [ApiResCallback<ApiResponseStatus.OK>?, ApiResCallback<ApiResponseStatus.FAILED>?]>()
 
   readonly #ctxSend: CtxSend
-  readonly #tempdir = path.resolve(__dirname, '../temp')
+  readonly #tempdir: string
 
   useMw (mw: Middleware): this {
     this.#middlewares.push(mw)

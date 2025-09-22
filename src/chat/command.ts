@@ -1,5 +1,5 @@
 import { type MiddlewareCtx, type DBKey } from './share.types'
-import { type LLM } from '../llm/llm'
+import { type LLM } from '../llm'
 import { type ApiRequest } from '../types/req'
 import { type ChatMiddleware } from './chat'
 

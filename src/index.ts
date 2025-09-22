@@ -23,7 +23,7 @@ import { bingyanCvs } from './jobs/bingyanCvs'
 // import { accelerateGif } from './middlewares/accelerateGif'
 
 const db = new Db({
-  path: path.resolve(__dirname, '../database'),
+  path: path.resolve(import.meta.dirname, '../database'),
 })
 
 const app = new App({
@@ -33,6 +33,7 @@ const app = new App({
   db,
   webhookServerPort: 10721,
   webhookToken: process.env.WEBHOOK_TOKEN,
+  tempdir: path.resolve(import.meta.dirname, '../temp'),
 })
 
 app
