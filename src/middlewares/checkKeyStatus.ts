@@ -1,5 +1,5 @@
 import { createMiddleware } from '../app'
-import { LLM } from '../llm/llm'
+import { LLM } from '../llm'
 
 export const checkKeyStatus = createMiddleware(async (ctx, next) => {
   const event = ctx.event

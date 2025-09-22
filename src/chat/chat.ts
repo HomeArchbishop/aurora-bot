@@ -1,7 +1,7 @@
 import { createMiddleware } from '../app'
 import { Preset } from './preset'
 import { type ApiRequest } from '../types/req'
-import { type LLM } from '../llm/llm'
+import { type LLM } from '../llm'
 import { type DBKey, type Middleware, type ReplyRequestSplits } from './share.types'
 import {
   type CommandRegistrar, type CommandRegistry, type CommandCallbackCtx,

@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-interface LLMOptions {
+export interface LLMOptions {
   apiHost: string
   keys: string[]
   model: string
@@ -21,7 +21,7 @@ interface LLMUsage {
 
 type LLMKeyStatus = 'ok' | 'bad' | 'unknown'
 
-class LLM {
+export class LLM {
   constructor ({
     apiHost,
     keys,
@@ -179,6 +179,3 @@ class LLM {
     })
   }
 }
-
-export { LLM }
-export type { LLMOptions }

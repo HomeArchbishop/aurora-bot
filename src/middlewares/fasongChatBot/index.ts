@@ -1,6 +1,6 @@
 import { ChatMiddleware, ChatMode } from '../../chat'
 import preset from './preset'
-import { LLM } from '../../llm/llm'
+import { LLM } from '../../llm'
 import { refreshKeyCommand, shutupCommand } from './commands/chores'
 import { clearEquipmentCommand, countEquipmentCommand, equipCommand, listEquipmentCommand, unequipCommand } from './commands/equipments'
 import { clearHistoryCommand, cntHistoryCommand, delHistoryCommand, historyCommand } from './commands/history'
