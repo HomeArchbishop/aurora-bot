@@ -23,6 +23,7 @@ import { bingyanCvs } from './jobs/bingyanCvs'
 
 const app = new App({
   url: process.env.NAPCAT_WS_URL,
+  token: process.env.NAPCAT_WS_TOKEN,
   logger,
   db,
   webhookServerPort: 10721,

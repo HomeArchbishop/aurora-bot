@@ -11,6 +11,7 @@ import { WebhookServer, type WebhookTriggerCtx } from './webserver'
 
 interface AppOptions {
   url: string
+  token?: string
   logger: winston.Logger
   db: Level<string, string>
   webhookServerPort?: number
@@ -44,9 +45,13 @@ type Job = (ctx: JobCtx) => Promise<void>
 type Webhook = (ctx: WebhookCtx) => Promise<void>
 
 class App {
-  constructor ({ url, logger, db, webhookServerPort = 3000, webhookToken }: AppOptions) {
+  constructor ({ url, token, logger, db, webhookServerPort = 3000, webhookToken }: AppOptions) {
     this.#logger = logger
-    this.#ws = new WebSocket(url)
+    this.#ws = new WebSocket(url, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : '',
+      },
+    })
     this.#db = db
     this.#webhookServer.setPort(webhookServerPort).setToken(webhookToken)
 

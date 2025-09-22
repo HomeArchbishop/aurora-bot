@@ -2,6 +2,7 @@ declare module 'bun' {
   interface Env {
     VERSION: string
     NAPCAT_WS_URL: string
+    NAPCAT_WS_TOKEN: string
     MASTER_ID: string
     WEBHOOK_TOKEN?: string
     LLM_API_HOST: string
