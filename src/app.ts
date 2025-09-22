@@ -5,15 +5,15 @@ import type { ApiRequest, ApiActionName } from './types/req'
 import type { WsEvent } from './types/event'
 import path from 'path'
 import { existsSync, mkdirSync } from 'fs'
-import { type Level } from 'level'
 import type { ApiResponseStatus, ApiResponse } from './types/res'
 import { WebhookServer, type WebhookTriggerCtx } from './webserver'
+import { Db } from './db'
 
 interface AppOptions {
   url: string
   token?: string
   logger: winston.Logger
-  db: Level<string, string>
+  db: Db
   webhookServerPort?: number
   webhookToken?: string
 }
@@ -37,9 +37,9 @@ interface CtxSend {
   ): void
 }
 
-interface MiddlewareCtx { event: WsEvent, send: CtxSend, tempdir: string, db: Level<string, string> }
-interface JobCtx { send: CtxSend, tempdir: string, db: Level<string, string> }
-interface WebhookCtx { send: CtxSend, tempdir: string, db: Level<string, string>, triggerCtx: WebhookTriggerCtx }
+interface MiddlewareCtx { event: WsEvent, send: CtxSend, tempdir: string, db: Db }
+interface JobCtx { send: CtxSend, tempdir: string, db: Db }
+interface WebhookCtx { send: CtxSend, tempdir: string, db: Db, triggerCtx: WebhookTriggerCtx }
 type Middleware = (ctx: MiddlewareCtx, next: () => Promise<void>) => Promise<void>
 type Job = (ctx: JobCtx) => Promise<void>
 type Webhook = (ctx: WebhookCtx) => Promise<void>
@@ -81,7 +81,7 @@ class App {
   readonly #webhookServer = new WebhookServer()
   readonly #logger: winston.Logger
   readonly #ws: WebSocket
-  readonly #db: Level<string, string>
+  readonly #db: Db
   readonly #jobs: Job[] = []
   readonly #middlewares: Middleware[] = [
     async (_, next) => { await next() },

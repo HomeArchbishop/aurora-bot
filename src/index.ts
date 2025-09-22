@@ -1,5 +1,6 @@
+import path from 'path'
 import { logger } from './logger'
-import { db } from './db'
+import { Db } from './db'
 import App from './app'
 // import { everyMinSend198Msg } from './jobs/everyMinSend198Msg'
 // import { onlyEchoMe } from './middlewares/onlyEchoMe'
@@ -20,6 +21,10 @@ import { bingyanCvs } from './jobs/bingyanCvs'
 // import { onlyEchoMeAndSendID } from './middlewares/onlyEchoMeAndSendID'
 // import { fasong2ChatBot } from './middlewares/fasong2ChatBot'
 // import { accelerateGif } from './middlewares/accelerateGif'
+
+const db = new Db({
+  path: path.resolve(__dirname, '../database'),
+})
 
 const app = new App({
   url: process.env.NAPCAT_WS_URL,
