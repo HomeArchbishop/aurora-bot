@@ -1,4 +1,4 @@
-import { createJob } from '../app'
+import { createJob } from 'aurorax'
 import type { CvsDetail } from '../services/bingyan-cvs/interface'
 import { Cvs } from '../services/bingyan-cvs/cvs'
 

@@ -1,4 +1,4 @@
-import { createJob } from '../app'
+import { createJob } from 'aurorax'
 
 export const tiichermate = createJob('*/3 * * * * *', async (ctx) => {
   const openid = process.env.TIICHERMATE_OPENID

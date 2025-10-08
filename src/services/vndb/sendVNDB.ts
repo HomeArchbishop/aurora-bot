@@ -1,4 +1,4 @@
-import { type createJob, type createMiddleware } from '../../app'
+import { type createJob, type createMiddleware } from 'aurorax'
 import { getReleaseInfo, getVnInfo } from './getVNDB'
 
 function getFlagEmoji (countryCode: string): string {

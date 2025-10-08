@@ -1,4 +1,4 @@
-import { createJob } from '../app'
+import { createJob } from 'aurorax'
 
 export const everyMinSend198Msg = createJob('* * * * *', async (ctx) => {
   ctx.send({

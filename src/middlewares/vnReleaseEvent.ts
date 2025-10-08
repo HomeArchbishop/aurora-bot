@@ -1,4 +1,4 @@
-import { createMiddleware } from '../app'
+import { createMiddleware } from 'aurorax'
 import { sendVNRelease } from '../services/vndb/sendVNDB'
 
 export const vnReleaseEvent = createMiddleware(async (ctx, next) => {

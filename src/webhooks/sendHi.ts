@@ -1,4 +1,4 @@
-import { createWebhook } from '../app'
+import { createWebhook } from 'aurorax'
 
 export const sendHi = createWebhook('sendhi', async (ctx) => {
   ctx.send({

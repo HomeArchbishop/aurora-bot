@@ -1,4 +1,4 @@
-import { createMiddleware } from '../app'
+import { createMiddleware } from 'aurorax'
 
 export const checkVersion = createMiddleware(async (ctx, next) => {
   const event = ctx.event

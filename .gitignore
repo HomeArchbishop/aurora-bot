@@ -1,7 +1,6 @@
 .DS_Store
 
 .env
-scripts
 node_modules
 
 logs

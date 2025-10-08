@@ -1,8 +1,8 @@
-import { createWebhook } from '../app'
+import { createWebhook } from 'aurorax'
 
 export const ledger = createWebhook('ledger', async (ctx) => {
   const amountStr: string = JSON.parse(
-    Buffer.from(ctx.triggerCtx.body).toString('utf-8')).amount
+    Buffer.from(ctx.event.body).toString('utf-8')).amount
   if (amountStr === null) {
     ctx.send({
       action: 'send_private_msg',

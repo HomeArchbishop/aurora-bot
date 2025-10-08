@@ -1,7 +1,4 @@
-import path from 'path'
-import { logger } from './logger'
-import { Db } from './db'
-import App from './app'
+import { App } from 'aurorax'
 // import { everyMinSend198Msg } from './jobs/everyMinSend198Msg'
 // import { onlyEchoMe } from './middlewares/onlyEchoMe'
 // import { forwardEveryEmotion } from './middlewares/forwardEveryEmotion'
@@ -12,8 +9,8 @@ import { emotion2image } from './middlewares/emotion2image'
 import { checkConn } from './middlewares/checkConn'
 import { fasongChatBot, fasong2ChatBot } from './middlewares/fasongChatBot'
 import { checkVersion } from './middlewares/checkVersion'
-import { checkKeyStatus } from './middlewares/checkKeyStatus'
-// import { sendHi } from './webhooks/sendHi'
+import { checkKeyUsage } from './middlewares/checkKeyUsage'
+import { sendHi } from './webhooks/sendHi'
 import { ledger } from './webhooks/ledger'
 import { vnEvent } from './jobs/vnEvent'
 import { vnReleaseEvent } from './middlewares/vnReleaseEvent'
@@ -22,18 +19,19 @@ import { bingyanCvs } from './jobs/bingyanCvs'
 // import { fasong2ChatBot } from './middlewares/fasong2ChatBot'
 // import { accelerateGif } from './middlewares/accelerateGif'
 
-const db = new Db({
-  path: path.resolve(import.meta.dirname, '../database'),
-})
+import './db'
+import './tempdir'
 
 const app = new App({
-  url: process.env.NAPCAT_WS_URL,
-  token: process.env.NAPCAT_WS_TOKEN,
-  logger,
-  db,
-  webhookServerPort: 10721,
-  webhookToken: process.env.WEBHOOK_TOKEN,
-  tempdir: path.resolve(import.meta.dirname, '../temp'),
+  onebot: {
+    type: 'ws-reverse',
+    url: process.env.NAPCAT_WS_URL,
+    token: process.env.NAPCAT_WS_TOKEN,
+  },
+  webhook: {
+    port: 10721,
+    tokens: [process.env.WEBHOOK_TOKEN].filter(Boolean) as string[],
+  },
 })
 
 app
@@ -49,7 +47,7 @@ app
   // .useMw(accelerateGif)
   // .useMw(forwardEveryEmotion)
   // .useJob(...everyMinSend198Msg)
-  .useMw(checkKeyStatus)
+  .useMw(checkKeyUsage)
   .useJob(...vnEvent)
   .useMw(vnReleaseEvent)
 
@@ -63,11 +61,7 @@ app
   .useMw(fasongChatBot)
   .useMw(fasong2ChatBot)
 
-  // .useWebhook(...sendHi)
+  .useWebhook(...sendHi)
   .useWebhook(...ledger)
 
-db.open()
-  .then(() => { app.start() })
-  .catch(() => {
-    process.exit(1)
-  })
+  .start()

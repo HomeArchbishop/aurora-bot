@@ -2,33 +2,37 @@
  * history command
  */
 
-import { createCommand } from '../../../chat'
+import { createCommand } from '@/extends/chat'
 
-export const clearHistoryCommand = createCommand(['#clearhistory', '#clrhistory'],
-  async ({ send, db, dbKey, textSegmentRequest }) => {
+export const clearHistoryCommand = createCommand({
+  pattern: [/^#clearhistory/, /^#clrhistory/],
+  permission: 'master',
+  async callback ({ send, domain: { db, dbKey, text } }) {
     await db.del(dbKey.history)
-    send(textSegmentRequest('已清除历史记录'))
+    send(text('已清除历史记录'))
   },
-  { permission: 'master' },
-)
+})
 
-export const historyCommand = createCommand('#history',
-  async ({ send, db, dbKey, textSegmentRequest }) => {
+export const historyCommand = createCommand({
+  pattern: [/^#history/],
+  permission: 'master',
+  async callback ({ send, domain: { db, dbKey, text } }) {
     const formerHistory = db.getSync(dbKey.history) ?? '[无聊天记录]'
     if (formerHistory.trim() === '') {
-      send(textSegmentRequest('[无聊天记录]'))
+      send(text('[无聊天记录]'))
       return
     }
-    send(textSegmentRequest(formerHistory.split(/\n/).slice(-50).join('\n')))
+    send(text(formerHistory.split(/\n/).slice(-50).join('\n')))
   },
-  { permission: 'master' },
-)
+})
 
-export const delHistoryCommand = createCommand('#delhistory',
-  async ({ send, db, dbKey, textSegmentRequest }, args) => {
+export const delHistoryCommand = createCommand({
+  pattern: [/^#delhistory/],
+  permission: 'master',
+  async callback ({ send, domain: { db, dbKey, text } }, args) {
     const formerHistory = db.getSync(dbKey.history)
     if (formerHistory === undefined) {
-      send(textSegmentRequest('没有聊天记录可供删除'))
+      send(text('没有聊天记录可供删除'))
       return
     }
     const regexStr = args.map(kw => `(${kw})`).join('|')
@@ -40,21 +44,22 @@ export const delHistoryCommand = createCommand('#delhistory',
     const deletedCount =
     formerHistory.split('\n').filter(line => line.trim().length !== 0).length -
     newHistory.split('\n').filter(line => line.trim().length !== 0).length
-    send(textSegmentRequest(`已删去包含/${regexStr}/的历史记录 ${deletedCount} 条`))
+    send(text(`已删去包含/${regexStr}/的历史记录 ${deletedCount} 条`))
   },
-  { permission: 'master' },
-)
+})
 
-export const cntHistoryCommand = createCommand('#cnthistory',
-  async ({ send, db, dbKey, textSegmentRequest }, args) => {
+export const cntHistoryCommand = createCommand({
+  pattern: [/^#cnthistory/],
+  permission: 'everyone',
+  async callback ({ send, domain: { db, dbKey, text } }, args) {
     const formerHistory = db.getSync(dbKey.history)
     if (args.length === 0) {
       const cnt = formerHistory?.split('\n').filter(line => line.trim().length !== 0).length ?? 0
-      send(textSegmentRequest(`当前聊天记录条数: ${cnt}`))
+      send(text(`当前聊天记录条数: ${cnt}`))
       return
     }
     if (formerHistory === undefined) {
-      send(textSegmentRequest('没有聊天记录可供统计'))
+      send(text('没有聊天记录可供统计'))
       return
     }
     const regexStr = args.map(kw => `(${kw})`).join('|')
@@ -62,7 +67,6 @@ export const cntHistoryCommand = createCommand('#cnthistory',
     const cnt = formerHistory.split('\n')
       .filter(line => regex.test(line.replace(/^\(.*?\):\s*/g, '').trim()))
       .length
-    send(textSegmentRequest(`查询到包含/${regexStr}/的历史记录 ${cnt} 条`))
+    send(text(`查询到包含/${regexStr}/的历史记录 ${cnt} 条`))
   },
-  { permission: 'everyone' },
-)
+})

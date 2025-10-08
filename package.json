@@ -1,29 +1,28 @@
 {
   "name": "aurora-bot",
-  "version": "1.0.135",
-  "main": "index.js",
-  "dependencies": {
-    "axios": "^1.9.0",
-    "level": "^10.0.0",
-    "node-schedule": "^2.1.1",
-    "winston": "^3.17.0",
-    "winston-daily-rotate-file": "^5.0.0",
-    "ws": "^8.18.1"
-  },
-  "license": "MIT",
+  "version": "2.0.0",
+  "license": "AGPL-3.0",
   "private": true,
+  "dependencies": {
+    "aurorax": "^0.1.0",
+    "axios": "^1.9.0"
+  },
   "devDependencies": {
     "@types/bun": "^1.2.10",
     "@types/node": "^24.3.0",
-    "@types/node-schedule": "^2.1.7",
-    "@types/ws": "^8.18.0",
     "eslint": "^9.33.0",
     "knip": "^5.64.0",
     "neostandard": "^0.12.2"
   },
   "scripts": {
     "start": "bun src/index.ts",
-    "dev": "bun --hot src/index.ts",
-    "build": "bun build src/index.ts --outdir ./dist --target bun --compile"
+    "dev": "bun --watch src/index.ts",
+    "check": "knip",
+    "build": "bun build src/index.ts --outdir ./dist --target node --packages external"
+  },
+  "module": "src/index.ts",
+  "type": "module",
+  "peerDependencies": {
+    "typescript": "^5"
   }
 }

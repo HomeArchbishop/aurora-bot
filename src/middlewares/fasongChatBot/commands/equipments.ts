@@ -2,56 +2,61 @@
  * equipment commands
  */
 
-import { createCommand } from '../../../chat'
+import { createCommand } from '@/extends/chat'
 
-export const equipCommand = createCommand(['#equip', '#eq'],
-  async ({ send, db, dbKey, textSegmentRequest }, args) => {
+export const equipCommand = createCommand({
+  pattern: [/^#equip/, /^#eq/],
+  permission: 'everyone',
+  async callback ({ send, domain: { db, dbKey, text } }, args) {
     const equipment = args.map(arg => arg.split(',')).flat()
     const formerEquipment = db.getSync(dbKey.equipment)?.split(',') ?? []
     const set = new Set(formerEquipment)
     equipment.forEach(e => set.add(e))
     await db.put(dbKey.equipment, Array.from(set).join(','))
-    send(textSegmentRequest(`已装备: ${Array.from(set).join(',')}`))
+    send(text(`已装备: ${Array.from(set).join(',')}`))
   },
-  { permission: 'everyone' },
-)
+})
 
-export const unequipCommand = createCommand(['#unequip', '#uneq'],
-  async ({ send, db, dbKey, textSegmentRequest }, args) => {
+export const unequipCommand = createCommand({
+  pattern: [/^#unequip/, /^#uneq/],
+  permission: 'everyone',
+  async callback ({ send, domain: { db, dbKey, text } }, args) {
     const equipment = args.map(arg => arg.split(',')).flat()
     const formerEquipment = db.getSync(dbKey.equipment)?.split(',') ?? []
     const set = new Set(formerEquipment)
     equipment.forEach(e => set.delete(e))
     await db.put(dbKey.equipment, Array.from(set).join(','))
-    send(textSegmentRequest(`卸下装备: ${equipment.join(',')}`))
+    send(text(`卸下装备: ${equipment.join(',')}`))
   },
-  { permission: 'everyone' },
-)
+})
 
-export const clearEquipmentCommand = createCommand(['#cleareq', '#clreq'],
-  async ({ send, db, dbKey, textSegmentRequest }) => {
+export const clearEquipmentCommand = createCommand({
+  pattern: [/^#cleareq/, /^#clreq/],
+  permission: 'everyone',
+  async callback ({ send, domain: { db, dbKey, text } }, args) {
     await db.del(dbKey.equipment)
-    send(textSegmentRequest('已清除装备列表'))
+    send(text('已清除装备列表'))
   },
-  { permission: 'everyone' },
-)
+})
 
-export const countEquipmentCommand = createCommand('#cnteq',
-  async ({ send, db, dbKey, textSegmentRequest }) => {
+export const countEquipmentCommand = createCommand({
+  pattern: [/^#cnteq/],
+  permission: 'everyone',
+  async callback ({ send, domain: { db, dbKey, text } }, args) {
     const cnt = (db.getSync(dbKey.equipment)?.split(',') ?? []).length
-    send(textSegmentRequest(`当前装备数量: ${cnt}`))
+    send(text(`当前装备数量: ${cnt}`))
   },
-  { permission: 'everyone' },
-)
+})
 
-export const listEquipmentCommand = createCommand('#lseq',
-  async ({ send, db, dbKey, textSegmentRequest }) => {
+export const listEquipmentCommand = createCommand({
+  pattern: [/^#lseq/],
+  permission: 'master',
+  async callback ({ send, domain: { db, dbKey, text } }, args) {
     const equipment = db.getSync(dbKey.equipment)
     if (equipment === undefined || equipment.trim() === '') {
-      send(textSegmentRequest('当前没有装备'))
+      send(text('当前没有装备'))
       return
     }
-    send(textSegmentRequest(`当前装备列表: ${equipment}`))
+    send(text(`当前装备列表: ${equipment}`))
   },
-  { permission: 'master' },
-)
+})

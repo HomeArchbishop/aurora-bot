@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from 'axios'
+import axios, { type AxiosInstance } from 'axios'
 import type {
   ApiResponse, GetDetailResult, LoginParams, LoginResult, CvsUserSession,
 } from './interface'

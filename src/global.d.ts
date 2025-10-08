@@ -5,6 +5,7 @@ declare module 'bun' {
     NAPCAT_WS_TOKEN: string
     MASTER_ID: string
     WEBHOOK_TOKEN?: string
+    LLM_PLATFORM: 'siliconflow'
     LLM_API_HOST: string
     LLM_API_KEYS: string
     CHATBOT_FASONG_MASTER_ID: string

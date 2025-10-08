@@ -1,4 +1,4 @@
-import { createJob } from '../app'
+import { createJob } from 'aurorax'
 import { sendVNRelease } from '../services/vndb/sendVNDB'
 
 export const vnEvent = createJob('0 21 7 * * *', async (ctx) => {

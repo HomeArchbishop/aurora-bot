@@ -1,4 +1,4 @@
-import { createMiddleware } from '../app'
+import { createMiddleware } from 'aurorax'
 
 export const onlyEchoMeAndSendID = createMiddleware(async (ctx, next) => {
   const event = ctx.event
@@ -15,7 +15,7 @@ export const onlyEchoMeAndSendID = createMiddleware(async (ctx, next) => {
           action: 'send_private_msg',
           params: {
             user_id: event.user_id,
-            message: `你的ID是: ${res.data.message_id}`,
+            message: `你的ID是: ${res.data?.message_id}`,
           },
         })
       })

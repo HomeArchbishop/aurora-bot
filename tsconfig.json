@@ -3,6 +3,8 @@
     "target": "ESNext",
     "module": "esnext",
     "moduleResolution": "node",
+    "declaration": true,
+    "declarationMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
@@ -11,7 +13,11 @@
     "forceConsistentCasingInFileNames": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "verbatimModuleSyntax": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["src/**/*.ts", "src/logger.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]
 }
