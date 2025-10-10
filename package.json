@@ -1,6 +1,6 @@
 {
   "name": "aurora-bot",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "license": "AGPL-3.0",
   "private": true,
   "dependencies": {
@@ -8,21 +8,26 @@
     "axios": "^1.9.0"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.2",
+    "@rollup/plugin-typescript": "^12.1.4",
     "@types/bun": "^1.2.10",
     "@types/node": "^24.3.0",
     "eslint": "^9.33.0",
     "knip": "^5.64.0",
-    "neostandard": "^0.12.2"
+    "neostandard": "^0.12.2",
+    "rollup": "^4.52.4"
   },
   "scripts": {
-    "start": "bun src/index.ts",
+    "start": "bun src/index.js",
     "dev": "bun --watch src/index.ts",
     "check": "knip",
-    "build": "bun build src/index.ts --outdir ./dist --target node --packages external"
+    "build": "bun scripts/build.js",
+    "deploy": "bun scripts/deploy.sh"
   },
-  "module": "src/index.ts",
   "type": "module",
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.9.3"
   }
 }

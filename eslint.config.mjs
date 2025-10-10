@@ -5,7 +5,7 @@ export default defineConfig([
   ...neostandard({
     ts: true,
   }),
-  globalIgnores(['dist/**/*.js']),
+  globalIgnores(['dist/**/*.{js,d.ts}']),
   {
     rules: {
       '@stylistic/comma-dangle': ['error', 'always-multiline'],
