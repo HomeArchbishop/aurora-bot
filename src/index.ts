@@ -21,6 +21,7 @@ import { bingyanCvs } from './jobs/bingyanCvs'
 
 import './db'
 import './tempdir'
+import { hajimi } from './middlewares/hajimi'
 
 const app = new App({
   onebot: {
@@ -39,7 +40,7 @@ app
   .useMw(reportConnect)
   .useMw(checkConn)
   .useMw(checkVersion)
-
+  .useMw(hajimi)
   /* applications */
   .useMw(emotion2image)
   // .useMw(onlyEchoMeAndSendID)

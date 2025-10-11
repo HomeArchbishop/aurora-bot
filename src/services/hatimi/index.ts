@@ -1,12 +1,12 @@
 /**
  * 哈基米编码映射表
  */
-const mapping = { 0: '哈', 1: '基', 2: '米' } as const
+const defaultMapping = { 0: '哈', 1: '基', 2: '米' } as const
 
 /**
  * 哈基米解码映射表
  */
-const reverseMapping = { 哈: 0, 基: 1, 米: 2 } as const
+const defaultReverseMapping = { 哈: 0, 基: 1, 米: 2 } as const
 
 /**
  * 私钥字符串
@@ -289,7 +289,8 @@ function generateShiftArrayFromPrivateKey (privateKey: string, encryptLength: nu
  * @param inputText - 要加密的文本
  * @returns 加密后的哈基米字符串
  */
-export function encryptText (inputText: string): string {
+export function encryptText (inputText: string, mappingText?: string): string {
+  const mapping = mappingText ? createMapping(mappingText).mapping : defaultMapping
   const shiftArray = generateShiftArrayFromPrivateKey(privateKey, inputText.length) // 根据私钥生成移位数组
   const encodedText = encodeHajiami(inputText, 3, mapping, shiftArray) // 加密
   return encodedText
@@ -300,8 +301,17 @@ export function encryptText (inputText: string): string {
  * @param inputText - 要解密的哈基米字符串
  * @returns 解密后的原始文本
  */
-export function decryptText (inputText: string): string {
+export function decryptText (inputText: string, reverseMappingText?: string): string {
+  const reverseMapping = reverseMappingText ? createMapping(reverseMappingText).reverseMapping : defaultReverseMapping
   const shiftArray = generateShiftArrayFromPrivateKey(privateKey, inputText.length) // 根据私钥生成移位数组
   const decodedText = decodeHajiami(inputText, 3, reverseMapping, shiftArray) // 解密
   return decodedText
+}
+
+const createMapping = (text: string) => {
+  const finalText = Array.from(new Set(text.slice(0, 3).split(''))).join('').padStart(3, '哈基米')
+  return {
+    mapping: Object.fromEntries(finalText.split('').map((char, index) => [index, char])),
+    reverseMapping: Object.fromEntries(finalText.split('').map((char, index) => [char, index])),
+  }
 }
