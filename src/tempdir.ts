@@ -1,4 +1,4 @@
-import { createTempDir } from 'aurorax'
+import { createTempDir } from '@/extensions/tempDir'
 import path from 'path'
 
 export const useTempDir = await createTempDir({

@@ -1,4 +1,4 @@
-import { createDb } from 'aurorax'
+import { createDb } from '@/extensions/db'
 import path from 'path'
 
 export const useDatabase = await createDb({

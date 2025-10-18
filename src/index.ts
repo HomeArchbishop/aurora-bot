@@ -2,19 +2,19 @@ import { App } from 'aurorax'
 // import { everyMinSend198Msg } from './jobs/everyMinSend198Msg'
 // import { onlyEchoMe } from './middlewares/onlyEchoMe'
 // import { forwardEveryEmotion } from './middlewares/forwardEveryEmotion'
-import { reportConnect } from './middlewares/reportConnect'
+import { reportConnect } from './middlewares/report-connect'
 import { tiichermate } from './jobs/tiichermate'
-import { tiichermateController } from './middlewares/tiichermateController'
-import { emotion2image } from './middlewares/emotion2image'
-import { checkConn } from './middlewares/checkConn'
-import { fasongChatBot, fasong2ChatBot } from './middlewares/fasongChatBot'
-import { checkVersion } from './middlewares/checkVersion'
-import { checkKeyUsage } from './middlewares/checkKeyUsage'
-import { sendHi } from './webhooks/sendHi'
+import { tiichermateController } from './middlewares/tiichermate-controller'
+import { emotion2image } from './middlewares/emotion-to-image'
+import { checkConn } from './middlewares/check-conn'
+import { fasongChatBot, fasong2ChatBot } from './middlewares/fasong-chatbot'
+import { checkVersion } from './middlewares/check-version'
+import { checkKeyUsage } from './middlewares/check-key-usage'
+import { sendHi } from './webhooks/send-hi'
 import { ledger } from './webhooks/ledger'
-import { vnEvent } from './jobs/vnEvent'
-import { vnReleaseEvent } from './middlewares/vnReleaseEvent'
-import { bingyanCvs } from './jobs/bingyanCvs'
+import { vnEvent } from './jobs/vn-event'
+import { vnReleaseEvent } from './middlewares/vn-release-event'
+// import { bingyanCvs } from './jobs/bingyan-cvs'
 // import { onlyEchoMeAndSendID } from './middlewares/onlyEchoMeAndSendID'
 // import { fasong2ChatBot } from './middlewares/fasong2ChatBot'
 // import { accelerateGif } from './middlewares/accelerateGif'
@@ -51,12 +51,11 @@ app
   .useMw(checkKeyUsage)
   .useJob(...vnEvent)
   .useMw(vnReleaseEvent)
+  // .useJob(...bingyanCvs)
 
   /* teachermate */
   .useMw(tiichermateController)
   .useJob(...tiichermate)
-
-  .useJob(...bingyanCvs)
 
   /* chat bot */
   .useMw(fasongChatBot)

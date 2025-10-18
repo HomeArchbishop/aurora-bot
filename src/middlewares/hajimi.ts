@@ -6,7 +6,7 @@ import { createMiddleware } from 'aurorax'
 const GROUP_IDS = [process.env.MISC_GROUP_ID_KINDERGARTEN, process.env.MISC_GROUP_ID_NEW528]
 const MASTER_ID = process.env.MASTER_ID
 
-export const hajimi = createMiddleware(async (ctx, next) => {
+export const hajimi = createMiddleware('hajimi', async (ctx, next) => {
   const event = ctx.event
   if (event.post_type !== 'message') {
     return await next()
