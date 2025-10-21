@@ -1,4 +1,5 @@
 import { App } from 'aurorax'
+// import { feishuDeeplink } from './middlewares/feishu-deeplink'
 // import { everyMinSend198Msg } from './jobs/everyMinSend198Msg'
 // import { onlyEchoMe } from './middlewares/onlyEchoMe'
 // import { forwardEveryEmotion } from './middlewares/forwardEveryEmotion'
@@ -58,6 +59,7 @@ app
   .useJob(...taffyLive)
   .useMw(taffyLiveAsk)
   .useMw(dbManager)
+  // .useMw(feishuDeeplink)
 
   /* teachermate */
   .useMw(tiichermateController)
