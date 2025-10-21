@@ -9,6 +9,10 @@ export const extractPureText = (message: MessageSegmentReceive[]) => {
   }, []).join(' ').trim()
 }
 
+export function createMessageSend<T extends MessageSend> (message: T): T {
+  return message
+}
+
 export function createDynamicSendMessageRequest (event: MessageEvent, message: MessageSend):
 Omit<ApiRequest<'send_private_msg' | 'send_group_msg'>, 'echo'> {
   if (event.message_type === 'private') {

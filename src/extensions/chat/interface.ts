@@ -1,4 +1,5 @@
-import type { Context, CronEvent, Db, OnebotEvent, ApiRequest, MessageEvent } from 'aurorax'
+import type { Context, CronEvent, OnebotEvent, ApiRequest, MessageEvent } from 'aurorax'
+import type { Db } from '../db'
 import type { Preset } from './preset'
 import type { LLM } from '../llm'
 import type { ChatbotBuilder } from './chat'

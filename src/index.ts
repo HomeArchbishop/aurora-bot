@@ -14,6 +14,7 @@ import { sendHi } from './webhooks/send-hi'
 import { ledger } from './webhooks/ledger'
 import { vnEvent } from './jobs/vn-event'
 import { vnReleaseEvent } from './middlewares/vn-release-event'
+import { taffyLive } from './jobs/taffy-live'
 // import { bingyanCvs } from './jobs/bingyan-cvs'
 // import { onlyEchoMeAndSendID } from './middlewares/onlyEchoMeAndSendID'
 // import { fasong2ChatBot } from './middlewares/fasong2ChatBot'
@@ -22,6 +23,8 @@ import { vnReleaseEvent } from './middlewares/vn-release-event'
 import './db'
 import './tempdir'
 import { hajimi } from './middlewares/hajimi'
+import { dbManager } from './middlewares/db-manager'
+import { taffyLiveAsk } from './middlewares/taffy-live-ask'
 
 const app = new App({
   onebot: {
@@ -52,6 +55,9 @@ app
   .useJob(...vnEvent)
   .useMw(vnReleaseEvent)
   // .useJob(...bingyanCvs)
+  .useJob(...taffyLive)
+  .useMw(taffyLiveAsk)
+  .useMw(dbManager)
 
   /* teachermate */
   .useMw(tiichermateController)
