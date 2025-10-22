@@ -26,6 +26,7 @@ import './tempdir'
 import { hajimi } from './middlewares/hajimi'
 import { dbManager } from './middlewares/db-manager'
 import { taffyLiveAsk } from './middlewares/taffy-live-ask'
+import { staticQa } from './middlewares/static-qa'
 
 const app = new App({
   onebot: {
@@ -60,6 +61,7 @@ app
   .useMw(taffyLiveAsk)
   .useMw(dbManager)
   // .useMw(feishuDeeplink)
+  .useMw(staticQa)
 
   /* teachermate */
   .useMw(tiichermateController)

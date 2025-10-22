@@ -6,7 +6,7 @@ const db = useDatabase()
 
 let lastNotifyCycle: number | null = null
 
-export const taffyLive = createJob('taffyLive', '*/5 * * * * *', async (ctx) => {
+export const taffyLive = createJob('taffyLive', '*/10 * * * *', async (ctx) => {
   const currentNotifyCycle = ~~((new Date().getHours() + 6) / 24) // 0 or 1
   const lastNotifiedTime = db.getSync('taffyLive:last_notified_time')
 
