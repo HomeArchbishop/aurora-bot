@@ -33,7 +33,6 @@ export const taffyLive = createJob('taffyLive', '*/10 * * * *', async (ctx) => {
   ])
   ;[
     Number(process.env.MISC_GROUP_ID_KINDERGARTEN),
-    Number(process.env.MISC_GROUP_ID_NEW528),
   ].forEach(groupId => {
     ctx.send({
       action: 'send_group_msg',
@@ -41,6 +40,19 @@ export const taffyLive = createJob('taffyLive', '*/10 * * * *', async (ctx) => {
         group_id: groupId,
         message: [
           ...message,
+          { type: 'at', data: { qq: process.env.MASTER_ID } },
+        ],
+      },
+    })
+  })
+  ;[
+    Number(process.env.MISC_GROUP_ID_NEW528),
+  ].forEach(groupId => {
+    ctx.send({
+      action: 'send_group_msg',
+      params: {
+        group_id: groupId,
+        message: [
           { type: 'at', data: { qq: process.env.MASTER_ID } },
         ],
       },

@@ -6,7 +6,21 @@ export const taffyLiveAsk = createMiddleware('taffyLiveAsk', async (ctx, next) =
     return await next()
   }
 
-  if (extractPureText(ctx.event.message) !== '永雏塔菲直播了吗？') {
+  const queries = [
+    'taffy直播了吗',
+    'taffy 直播了吗',
+    '永雏塔菲直播了吗',
+    '塔菲直播了吗',
+    '塔菲在直播吗',
+    '塔菲在不在直播',
+    '塔菲在不在播',
+    '永',
+  ].map(query => ([
+    `${query}?`,
+    `${query}？`,
+  ])).flat()
+
+  if (!queries.includes(extractPureText(ctx.event.message))) {
     return await next()
   }
 
