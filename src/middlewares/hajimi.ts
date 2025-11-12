@@ -23,6 +23,23 @@ export const hajimi = createMiddleware('hajimi', async (ctx, next) => {
   if (!hit) {
     return await next()
   }
+
+  const args = instruction.split(/\s+/)
+  const pairs: string[][] = []
+  args.forEach((arg) => {
+    if (arg.startsWith('-')) {
+      pairs.push([])
+    }
+    const activePair = pairs.at(-1)
+    if (activePair) {
+      activePair.push(arg)
+    }
+  })
+
+  const isDirect = pairs.some(pair => pair[0] === '--direct' || pair[0] === '-d')
+  const repeatTimes = pairs.find(pair => pair[0] === '--repeat' || pair[0] === '-r')?.[1] ?? 1
+  const actualRepeatTimes = Math.min(Number(repeatTimes), 10)
+
   const replyMessage = await promisify(ctx.send)({
     action: 'get_msg',
     params: {
@@ -31,9 +48,16 @@ export const hajimi = createMiddleware('hajimi', async (ctx, next) => {
   })
   const hajimiText = replyMessage.data.raw_message
   const text = encodeHit ? encryptText(hajimiText) : decryptText(hajimiText)
-  const p = encodeHit ? '加密⬇' : '解密⬇'
-  if (!text) { return await next() }
-  ctx.send(createDynamicSendMessageRequest(event, p))
-  await Bun.sleep(200)
-  ctx.send(createDynamicSendMessageRequest(event, text))
+  if (!isDirect) {
+    const p = encodeHit ? '加密⬇' : '解密⬇'
+    if (!text) { return await next() }
+    ctx.send(createDynamicSendMessageRequest(event, p))
+    await Bun.sleep(200)
+  }
+  for (let i = 0; i < actualRepeatTimes; i++) {
+    ctx.send(createDynamicSendMessageRequest(event, text))
+    if (i < actualRepeatTimes - 1) {
+      await Bun.sleep(200)
+    }
+  }
 })

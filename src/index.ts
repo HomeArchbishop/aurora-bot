@@ -27,6 +27,8 @@ import { hajimi } from './middlewares/hajimi'
 import { dbManager } from './middlewares/db-manager'
 import { taffyLiveAsk } from './middlewares/taffy-live-ask'
 import { staticQa } from './middlewares/static-qa'
+import { attackOn } from './middlewares/attack-on'
+import { delegateMsg } from './middlewares/delegate-msg'
 
 const app = new App({
   onebot: {
@@ -62,6 +64,8 @@ app
   .useMw(dbManager)
   // .useMw(feishuDeeplink)
   .useMw(staticQa)
+  .useMw(attackOn)
+  .useMw(delegateMsg)
 
   /* teachermate */
   .useMw(tiichermateController)
