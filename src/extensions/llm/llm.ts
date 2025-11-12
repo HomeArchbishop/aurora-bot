@@ -1,10 +1,14 @@
 import axios from 'axios'
-import type { LlmPlatform, LlmInputMessage } from './interface'
-import { OpenaiAdapter, SiliconflowAdapter, type PlatformAdapter } from './internal/platform-adapters'
+import { LlmPlatform, type LlmInputMessage } from './interface'
+import { OpenaiAdapter, type PlatformAdapter } from './internal/platform-adapters'
 import { type KeyObject, KeyPool } from './internal/key-pool'
 
+const isValidPlatform = (platform: string): platform is LlmPlatform => {
+  return Object.values(LlmPlatform).includes(platform as LlmPlatform)
+}
+
 interface LlmOptions {
-  platform: LlmPlatform
+  platform: string
   apiHost: string
   keys: string[]
   model: string
@@ -35,7 +39,7 @@ export class LLM {
     topP = 1.0,
     additionalHeaders = {},
   }: LlmOptions) {
-    this.#platform = platform
+    this.#platform = isValidPlatform(platform) ? platform : LlmPlatform.OpenAI
     this.#apiHost = apiHost
     this.#keys = keys
     this.#keyPool = new KeyPool(keys)
@@ -43,14 +47,12 @@ export class LLM {
     this.#temperature = temperature
     this.#topP = topP
     this.#additionalHeaders = additionalHeaders
-    this.#adapter = this.#initializeAdapter(platform)
+    this.#adapter = this.#initializeAdapter(this.#platform)
     this.#isInitialized = true
   }
 
   #initializeAdapter (platform: LlmPlatform): PlatformAdapter {
     switch (platform) {
-      case 'siliconflow':
-        return new SiliconflowAdapter()
       case 'openai':
       default:
         return new OpenaiAdapter()

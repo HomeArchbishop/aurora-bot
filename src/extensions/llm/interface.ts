@@ -1,4 +1,7 @@
-export type LlmPlatform = 'openai' | 'siliconflow'
+export enum LlmPlatform {
+  OpenAI = 'openai',
+  Anthropic = 'anthropic',
+}
 
 export interface LlmInputMessage {
   role: 'system' | 'user' | 'assistant'
