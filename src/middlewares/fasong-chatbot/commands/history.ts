@@ -3,6 +3,9 @@
  */
 
 import { createCommand } from '@/extensions/chat'
+import { useTempDir } from '@/tempdir'
+import fs from 'fs'
+import path from 'path'
 
 export const clearHistoryCommand = createCommand({
   pattern: [/^#clearhistory/, /^#clrhistory/],
@@ -68,5 +71,41 @@ export const cntHistoryCommand = createCommand({
       .filter(line => regex.test(line.replace(/^\(.*?\):\s*/g, '').trim()))
       .length
     send(text(`查询到包含/${regexStr}/的历史记录 ${cnt} 条`))
+  },
+})
+
+export const dumpHistoryCommand = createCommand({
+  pattern: [/^#dumphistory/],
+  permission: 'master',
+  async callback ({ send, domain: { db, dbKey, text, eventId, isGroup } }) {
+    const formerHistory = db.getSync(dbKey.history)
+    if (formerHistory === undefined || formerHistory.trim() === '') {
+      send(text('没有聊天记录可供导出'))
+      return
+    }
+    try {
+      const tempdir = useTempDir()
+      const filename = `history_${Date.now()}.txt`
+      const filePath = path.resolve(tempdir, filename)
+      fs.writeFileSync(filePath, formerHistory, 'utf-8')
+      send({
+        action: isGroup ? 'send_group_msg' : 'send_private_msg',
+        params: {
+          user_id: eventId,
+          group_id: eventId,
+          message: [
+            {
+              type: 'file',
+              data: {
+                file: filePath,
+                name: filename,
+              },
+            },
+          ],
+        },
+      })
+    } catch (err: any) {
+      send(text(`导出历史记录失败: ${err.message}`))
+    }
   },
 })

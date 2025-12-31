@@ -3,7 +3,7 @@ import { LLM } from '@/extensions/llm'
 import preset from './preset'
 import { refreshKeyCommand, shutupCommand } from './commands/chores'
 import { clearEquipmentCommand, countEquipmentCommand, equipCommand, listEquipmentCommand, unequipCommand } from './commands/equipments'
-import { clearHistoryCommand, cntHistoryCommand, delHistoryCommand, historyCommand } from './commands/history'
+import { clearHistoryCommand, cntHistoryCommand, delHistoryCommand, dumpHistoryCommand, historyCommand } from './commands/history'
 import { replyDecorator } from './plugins/reply-decorator'
 import { tempEnableCommand } from './super-commands/tempenable'
 import { useDatabase } from '@/db'
@@ -32,6 +32,7 @@ export const [fasongChatBot, fasong2ChatBot] =
     .useCommand(historyCommand)
     .useCommand(delHistoryCommand)
     .useCommand(cntHistoryCommand)
+    .useCommand(dumpHistoryCommand)
 
     .useCommand(equipCommand)
     .useCommand(unequipCommand)
