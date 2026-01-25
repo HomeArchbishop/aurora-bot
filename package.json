@@ -6,6 +6,7 @@
   "dependencies": {
     "aurorax": "^0.1.0",
     "axios": "^1.9.0",
+    "jsdom": "^27.4.0",
     "level": "^10.0.0"
   },
   "devDependencies": {
@@ -14,6 +15,7 @@
     "@rollup/plugin-node-resolve": "^16.0.2",
     "@rollup/plugin-typescript": "^12.1.4",
     "@types/bun": "^1.2.10",
+    "@types/jsdom": "^27.0.0",
     "@types/node": "^24.3.0",
     "eslint": "^9.33.0",
     "knip": "^5.64.0",

@@ -29,6 +29,7 @@ import { taffyLiveAsk } from './middlewares/taffy-live-ask'
 import { staticQa } from './middlewares/static-qa'
 import { attackOn } from './middlewares/attack-on'
 import { delegateMsg } from './middlewares/delegate-msg'
+// import { dprkAriticle } from './jobs/dprk-ariticle'
 
 const app = new App({
   onebot: {
@@ -66,6 +67,7 @@ app
   .useMw(staticQa)
   .useMw(attackOn)
   .useMw(delegateMsg)
+  // .useJob(...dprkAriticle)
 
   /* teachermate */
   .useMw(tiichermateController)

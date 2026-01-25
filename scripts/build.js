@@ -59,8 +59,8 @@ console.log('Building package.json...')
 
 const thisPackageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json')))
 const auroraxPackageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../node_modules/aurorax/package.json')))
-thisPackageJson.dependencies = auroraxPackageJson.dependencies
-thisPackageJson.devDependencies = auroraxPackageJson.devDependencies
+thisPackageJson.dependencies = { ...thisPackageJson.dependencies, ...auroraxPackageJson.dependencies, aurorax: undefined }
+thisPackageJson.devDependencies = { ...thisPackageJson.devDependencies, ...auroraxPackageJson.devDependencies }
 fs.writeFileSync(path.join(buildDir, 'package.json'), JSON.stringify(thisPackageJson, null, 2))
 
 console.log('Building .env...')
