@@ -6,7 +6,7 @@ import type { ChatbotBuilder } from './chat'
 
 type NoEchoApiRequest = Omit<ApiRequest, 'echo'>
 
-type ReplyRequestSplit = NoEchoApiRequest | string
+export type ReplyRequestSplit = NoEchoApiRequest | string
 type DBKey = Record<string, string>
 
 /**
@@ -26,7 +26,7 @@ export enum ChatMode {
  */
 export interface EnableGroupOptions {
   rate: number
-  replyOnAt: boolean
+  replyOnMention: boolean
 }
 
 /**
@@ -43,7 +43,7 @@ export interface EnableItem {
   id: number
   type: 'group' | 'private'
   rate: number
-  replyOnAt: boolean
+  replyOnMention: boolean
 }
 
 /**
@@ -85,7 +85,7 @@ interface DomainPart {
   readonly isGroup: boolean
   readonly eventId: number
   readonly isFromMaster: boolean
-  readonly isBeenAt: boolean
+  readonly isMentioned: boolean
   readonly enableHit?: EnableItem
   readonly isShutup: boolean
   readonly text: (str: string) => NoEchoApiRequest
@@ -95,7 +95,7 @@ interface DomainPart {
 /**
  * @internal onebot 上下文
  */
-interface ChatbotOnebotContext extends Readonly<Context<OnebotEvent>> {
+export interface ChatbotOnebotContext extends Readonly<Context<OnebotEvent>> {
   event: MessageEvent
   domain: DomainPart
 }
@@ -110,4 +110,4 @@ interface ChatbotCronContext extends Readonly<Context<CronEvent>> {
 /**
  * @internal chatbot 上下文
  */
-type ChatbotContext = ChatbotOnebotContext | ChatbotCronContext
+export type ChatbotContext = ChatbotOnebotContext | ChatbotCronContext

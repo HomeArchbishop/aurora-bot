@@ -1,4 +1,5 @@
 import type { ApiRequest } from 'aurorax'
+import type { ReplyRequestSplit } from './interface'
 
 /**
  * Util function to create a pure text request
@@ -21,4 +22,8 @@ Omit<ApiRequest<'send_group_msg' | 'send_private_msg'>, 'echo'> {
           message: str,
         },
       } as const
+}
+
+export function filterEmptySplits (splits: ReplyRequestSplit[]): ReplyRequestSplit[] {
+  return splits.filter(split => typeof split !== 'string' || split.trim() !== '')
 }

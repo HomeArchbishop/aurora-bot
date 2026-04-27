@@ -17,7 +17,7 @@ export const tempEnableCommand = createCommand({
     if (event.post_type === 'message') {
       if (event.message_type === 'group') {
         const groupId = event.group_id
-        this.enableGroup(groupId, { rate: rateNum, replyOnAt: true })
+        this.enableGroup(groupId, { rate: rateNum, replyOnMention: true })
         send(text(`已临时启用 group[${groupId}]，速率[${rateNum}]`))
       } else {
         const userId = event.user_id

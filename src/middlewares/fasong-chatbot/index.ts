@@ -50,21 +50,21 @@ export const [fasongChatBot, fasong2ChatBot] =
     .fork([
       fork1 => fork1
         .enablePrivate(Number(process.env.MASTER_ID))
-        .enableGroup(Number(process.env.MISC_GROUP_ID_PAISHE), { rate: 0.03, replyOnAt: true }) // 牌社
-        .enableGroup(Number(process.env.MISC_GROUP_ID_ABC), { rate: 1, replyOnAt: true }) // abc
-        .enableGroup(Number(process.env.MISC_GROUP_ID_JISHUZU), { rate: 0.05, replyOnAt: true }) // 技术组
-        .enableGroup(Number(process.env.MISC_GROUP_ID_528), { rate: 0.4, replyOnAt: true }) // 528
-        .enableGroup(Number(process.env.MISC_GROUP_ID_YANGGU), { rate: 1, replyOnAt: true }) // yanggu
-        .enableGroup(Number(process.env.MISC_GROUP_ID_KINDERGARTEN), { rate: 0.1, replyOnAt: true }) // 幼儿园
-        .enableGroup(Number(process.env.MISC_GROUP_ID_NULIXUEXI), { rate: 0.4, replyOnAt: true }) // 努力学习
-        .enableGroup(Number(process.env.MISC_GROUP_ID_SHANXIA), { rate: 0.02, replyOnAt: true }) // 山下
-        .enableGroup(Number(process.env.MISC_GROUP_ID_4886), { rate: 0.4, replyOnAt: true }) // 4886
-        .enableGroup(Number(process.env.MISC_GROUP_ID_NEW528), { rate: 0.05, replyOnAt: true }) // new 528
+        .enableGroup(Number(process.env.MISC_GROUP_ID_PAISHE), { rate: 0.03, replyOnMention: true }) // 牌社
+        .enableGroup(Number(process.env.MISC_GROUP_ID_ABC), { rate: 1, replyOnMention: true }) // abc
+        .enableGroup(Number(process.env.MISC_GROUP_ID_JISHUZU), { rate: 0.05, replyOnMention: true }) // 技术组
+        .enableGroup(Number(process.env.MISC_GROUP_ID_528), { rate: 0.4, replyOnMention: true }) // 528
+        .enableGroup(Number(process.env.MISC_GROUP_ID_YANGGU), { rate: 1, replyOnMention: true }) // yanggu
+        .enableGroup(Number(process.env.MISC_GROUP_ID_KINDERGARTEN), { rate: 0.1, replyOnMention: true }) // 幼儿园
+        .enableGroup(Number(process.env.MISC_GROUP_ID_NULIXUEXI), { rate: 0.4, replyOnMention: true }) // 努力学习
+        .enableGroup(Number(process.env.MISC_GROUP_ID_SHANXIA), { rate: 0.02, replyOnMention: true }) // 山下
+        .enableGroup(Number(process.env.MISC_GROUP_ID_4886), { rate: 0.4, replyOnMention: true }) // 4886
+        .enableGroup(Number(process.env.MISC_GROUP_ID_NEW528), { rate: 0.05, replyOnMention: true }) // new 528
         .useSuperCommand(tempEnableCommand)
         .bubble,
       fork2 => fork2
         .useChatMode(ChatMode.SingleLineReply)
-        .enableGroup(Number(process.env.MISC_GROUP_ID_JIAYUAN), { rate: 0.02, replyOnAt: true }) // 家园&冰岩
+        .enableGroup(Number(process.env.MISC_GROUP_ID_JIAYUAN), { rate: 0.02, replyOnMention: true }) // 家园&冰岩
         .bubble,
     ])
     .buildAll()
