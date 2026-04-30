@@ -176,6 +176,15 @@ export class ChatbotBuilder {
     this.#constructionLog.push(logItem)
   }
 
+  getCommandHelpString (): string {
+    return [...this.#superCommands, ...this.#commands]
+      .reduce((acc, cmd) => {
+        const pattern = cmd.pattern.map(reg => reg.source.replace(/^\^/, '').replace(/\$$/, '')).join('|')
+        acc += `${pattern} ${cmd.description ?? ''}\n`
+        return acc
+      }, '')
+  }
+
   get bubble (): this { return this }
 
   #getBuilderConditions () {
@@ -271,7 +280,7 @@ export class ChatbotBuilder {
     if (Array.isArray(cmd.permission)) {
       return cmd.permission.includes(event.user_id) || this.#isFromMaster(event)
     }
-    return false
+    return true
   }
 
   #hitCommand (event: MessageEvent, commandRegistry: Command[]) {

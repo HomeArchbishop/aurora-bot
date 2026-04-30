@@ -29,6 +29,9 @@ import { taffyLiveAsk } from './middlewares/taffy-live-ask'
 import { staticQa } from './middlewares/static-qa'
 import { attackOn } from './middlewares/attack-on'
 import { delegateMsg } from './middlewares/delegate-msg'
+import { correctWork } from './middlewares/correct-work'
+import { whatsFuckingThis } from './middlewares/whats-fucking-this'
+import { say } from './middlewares/say'
 // import { dprkAriticle } from './jobs/dprk-ariticle'
 
 const app = new App({
@@ -67,6 +70,9 @@ app
   .useMw(staticQa)
   .useMw(attackOn)
   .useMw(delegateMsg)
+  .useMw(correctWork)
+  .useMw(whatsFuckingThis)
+  .useMw(say)
   // .useJob(...dprkAriticle)
 
   /* teachermate */

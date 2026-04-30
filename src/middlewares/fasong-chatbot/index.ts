@@ -9,6 +9,7 @@ import { tempEnableCommand } from './super-commands/tempenable'
 import { useDatabase } from '@/db'
 import { promptDecorator } from './plugins/prompt-decorator'
 import { messageStringParser } from './plugins/message-string-parser'
+import { helpCommand } from './super-commands/help'
 
 const llm = new LLM({
   platform: process.env.LLM_PLATFORM,
@@ -27,6 +28,8 @@ export const [fasongChatBot, fasong2ChatBot] =
     .useLLM(llm)
     .useDb(db)
     .useMaster(Number(process.env.CHATBOT_FASONG_MASTER_ID))
+
+    .useSuperCommand(helpCommand)
 
     .useCommand(clearHistoryCommand)
     .useCommand(historyCommand)

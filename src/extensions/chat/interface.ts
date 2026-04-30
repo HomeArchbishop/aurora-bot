@@ -52,6 +52,7 @@ export interface EnableItem {
 export interface Command {
   pattern: RegExp[]
   permission: 'master' | 'everyone' | number[]
+  description?: string
   callback (this: ChatbotBuilder, ctx: ChatbotOnebotContext, args: string[]): Promise<void>
 }
 

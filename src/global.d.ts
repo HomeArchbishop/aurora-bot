@@ -16,5 +16,6 @@ declare module 'bun' {
     SERVICE_BINGYAN_CVS_PASSWORD: string
     SERVICE_BINGYAN_CVS_PERIOD: string
     [MISC_GROUP_ID_XXX: `MISC_GROUP_ID_${string}`]: string
+    PPINFRA_API_TOKEN: string
   }
 }

@@ -1,0 +1,37 @@
+import { createDynamicSendMessageRequest, extractPureText } from '@/utils/onebot-utils'
+import { createMiddleware } from 'aurorax'
+
+const GROUP_IDS = [process.env.MISC_GROUP_ID_KINDERGARTEN, process.env.MISC_GROUP_ID_NEW528]
+const MASTER_ID = process.env.MASTER_ID
+
+export const imageGenerator = createMiddleware('imageGenerator', async (ctx, next) => {
+  const event = ctx.event
+  if (event.post_type !== 'message') {
+    return await next()
+  }
+  const groupHit = event.message_type === 'group' && GROUP_IDS.includes(`${event.group_id}`)
+  const privateHit = event.message_type === 'private' && event.user_id === Number(MASTER_ID)
+  const instruction = extractPureText(event.message).trim()
+  const commandHit = /^#img/.test(instruction)
+  const hit = (groupHit || privateHit) && commandHit
+  if (!hit) {
+    return await next()
+  }
+
+  // const args = instruction.split(' ').slice(1)
+
+  // const pairs: string[][] = []
+  // args.forEach((arg) => {
+  //   if (arg.startsWith('-')) {
+  //     pairs.push([])
+  //   }
+  //   const activePair = pairs.at(-1)
+  //   if (activePair) {
+  //     activePair.push(arg)
+  //   }
+  // })
+
+  ctx.send(createDynamicSendMessageRequest(event, [
+    { type: 'text', data: { text: 'sb' } },
+  ]))
+})
