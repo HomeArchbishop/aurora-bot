@@ -34,6 +34,8 @@ import { whatsFuckingThis } from './middlewares/whats-fucking-this'
 import { taffySay } from './middlewares/taffy-say'
 import { ppioBill } from './middlewares/ppio-bill'
 import { sendZcMsg } from './jobs/send-zc-msg'
+import { send2minArticle } from './jobs/send-2min-article'
+import { send2minArticleMw } from './middlewares/send-2min-article'
 // import { dprkAriticle } from './jobs/dprk-ariticle'
 
 const app = new App({
@@ -75,12 +77,14 @@ app
   .useMw(correctWork)
   .useMw(whatsFuckingThis)
   .useMw(taffySay)
+  .useMw(send2minArticleMw)
   // .useJob(...dprkAriticle)
   .useMw(ppioBill)
   /* teachermate */
   .useMw(tiichermateController)
   .useJob(...tiichermate)
   .useJob(...sendZcMsg)
+  .useJob(...send2minArticle)
 
   /* chat bot */
   .useMw(fasongChatBot)

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "declaration": false,
     // "declarationMap": true,
     "outDir": "./build",
@@ -16,7 +16,8 @@
     "verbatimModuleSyntax": true,
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "types": ["bun"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]
