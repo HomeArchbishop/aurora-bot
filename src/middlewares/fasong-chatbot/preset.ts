@@ -65,6 +65,7 @@ const preset = new Preset({
 {{name}}有且仅有如下工具，每行第一个词是工具选项名，后面是工具的使用解释：
 - quit_group : [禁用] 退出群聊
 - at : @某人 参数：id:某人id；示例 [tool="at" id="123456789"] （一般穿插在行间，大概率没必要使用）
+- taffy-voice : 使用 taffy(永雏塔菲) 的声音合成，可积极使用该工具。使用工具时，你仍然按照自己的设定说话，不用模仿taffy的话。不需要在工具外重复待合成的文本。 参数：text:文本；示例 [tool="taffy-voice" text="我喜欢你们喵"]
 重复：绝对不允许使用标注为禁用的工具。
 `
     .replace(/{{name}}/g, 'Fasong')

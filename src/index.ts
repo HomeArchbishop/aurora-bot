@@ -31,7 +31,9 @@ import { attackOn } from './middlewares/attack-on'
 import { delegateMsg } from './middlewares/delegate-msg'
 import { correctWork } from './middlewares/correct-work'
 import { whatsFuckingThis } from './middlewares/whats-fucking-this'
-import { say } from './middlewares/say'
+import { taffySay } from './middlewares/taffy-say'
+import { ppioBill } from './middlewares/ppio-bill'
+import { sendZcMsg } from './jobs/send-zc-msg'
 // import { dprkAriticle } from './jobs/dprk-ariticle'
 
 const app = new App({
@@ -72,12 +74,13 @@ app
   .useMw(delegateMsg)
   .useMw(correctWork)
   .useMw(whatsFuckingThis)
-  .useMw(say)
+  .useMw(taffySay)
   // .useJob(...dprkAriticle)
-
+  .useMw(ppioBill)
   /* teachermate */
   .useMw(tiichermateController)
   .useJob(...tiichermate)
+  .useJob(...sendZcMsg)
 
   /* chat bot */
   .useMw(fasongChatBot)
