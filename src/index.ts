@@ -4,6 +4,7 @@ import { App } from 'aurorax'
 // import { onlyEchoMe } from './middlewares/onlyEchoMe'
 // import { forwardEveryEmotion } from './middlewares/forwardEveryEmotion'
 import { reportConnect } from './middlewares/report-connect'
+import { heartbeatWatch } from './middlewares/heartbeat-watch'
 import { tiichermate } from './jobs/tiichermate'
 import { tiichermateController } from './middlewares/tiichermate-controller'
 import { emotion2image } from './middlewares/emotion-to-image'
@@ -36,6 +37,7 @@ import { ppioBill } from './middlewares/ppio-bill'
 import { sendZcMsg } from './jobs/send-zc-msg'
 import { send2minArticle } from './jobs/send-2min-article'
 import { send2minArticleMw } from './middlewares/send-2min-article'
+import { registerConnectionLifecycle } from './lifecycle/connection-notify'
 // import { dprkAriticle } from './jobs/dprk-ariticle'
 
 const app = new App({
@@ -50,8 +52,11 @@ const app = new App({
   },
 })
 
+registerConnectionLifecycle(app)
+
 app
   /* system middlewares */
+  .useMw(heartbeatWatch)
   .useMw(reportConnect)
   .useMw(checkConn)
   .useMw(checkVersion)
