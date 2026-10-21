@@ -1,3 +1,4 @@
+import { isPrivateFrom } from '@/extensions/gate'
 import { createDynamicSendMessageRequest } from '@/utils/onebot-utils'
 import { createMiddleware } from 'aurorax'
 import minimist from 'minimist'
@@ -6,10 +7,9 @@ const MASTER_ID = process.env.MASTER_ID
 
 export const ppioBill = createMiddleware('ppioBill', async (ctx, next) => {
   const event = ctx.event
-  if (event.post_type !== 'message') {
+  if (!isPrivateFrom(event, MASTER_ID)) {
     return await next()
   }
-  const privateHit = event.message_type === 'private' && event.user_id === Number(MASTER_ID)
   const { _: [instruction], d: days, k: apikeyName } = minimist(event.raw_message.split(' '), {
     string: ['d', 'k'],
     default: {
@@ -17,10 +17,7 @@ export const ppioBill = createMiddleware('ppioBill', async (ctx, next) => {
       k: '',
     },
   })
-  const commandHit = instruction === '#ppiobill'
-
-  const hit = privateHit && commandHit
-  if (!hit) {
+  if (instruction !== '#ppiobill') {
     return await next()
   }
 

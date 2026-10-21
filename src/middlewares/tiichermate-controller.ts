@@ -1,9 +1,10 @@
+import { isPrivateFrom } from '@/extensions/gate'
 import { createMiddleware } from 'aurorax'
 
 export const tiichermateController = createMiddleware('tiichermateController', async (ctx, next) => {
   const event = ctx.event
-  if (event.post_type === 'message' && event.message_type === 'private') {
-    if (event.user_id === Number(process.env.MASTER_ID) && event.raw_message.match(/https:\/\/tiichermate\..*\?.*openid=\w+/i) !== null) {
+  if (isPrivateFrom(event, process.env.MASTER_ID)) {
+    if (event.raw_message.match(/https:\/\/tiichermate\..*\?.*openid=\w+/i) !== null) {
       const openid = event.raw_message.match(/openid=(\w+)(&|$)/i)?.[1]
       const api = event.raw_message.match(/api=(.+?)(&|$)/i)?.[1]
       if (openid === undefined || api === undefined) {
@@ -29,7 +30,7 @@ export const tiichermateController = createMiddleware('tiichermateController', a
       await next()
       return
     }
-    if (event.user_id === Number(process.env.MASTER_ID) && event.raw_message === 'tq') {
+    if (event.raw_message === 'tq') {
       delete process.env.TIICHERMATE_OPENID
       delete process.env.TIICHERMATE_API
       ctx.send({

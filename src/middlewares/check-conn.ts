@@ -1,19 +1,16 @@
+import { isPrivateFrom } from '@/extensions/gate'
 import { createMiddleware } from 'aurorax'
 
 export const checkConn = createMiddleware('checkConn', async (ctx, next) => {
   const event = ctx.event
-  if (event.post_type === 'message' && event.message_type === 'private') {
-    if (event.user_id === Number(process.env.MASTER_ID) && event.raw_message === 'ping') {
-      ctx.send({
-        action: 'send_private_msg',
-        params: {
-          user_id: event.user_id,
-          message: 'pong!',
-        },
-      })
-      // await next()
-      return
-    }
+  if (!isPrivateFrom(event, process.env.MASTER_ID) || event.raw_message !== 'ping') {
+    return await next()
   }
-  await next()
+  ctx.send({
+    action: 'send_private_msg',
+    params: {
+      user_id: event.user_id,
+      message: 'pong!',
+    },
+  })
 })

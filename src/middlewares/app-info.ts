@@ -1,11 +1,9 @@
+import { isPrivateFrom } from '@/extensions/gate'
 import { createMiddleware, type App } from 'aurorax'
 
 export const createAppInfoMw = (app: App) => createMiddleware('appInfo', async (ctx, next) => {
   const event = ctx.event
-  if (event.post_type !== 'message' || event.message_type !== 'private') {
-    return await next()
-  }
-  if (event.user_id !== Number(process.env.MASTER_ID) || event.raw_message !== 'info') {
+  if (!isPrivateFrom(event, process.env.MASTER_ID) || event.raw_message !== 'info') {
     return await next()
   }
 

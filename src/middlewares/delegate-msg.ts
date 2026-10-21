@@ -1,3 +1,4 @@
+import { allowChannel } from '@/extensions/gate'
 import { createDynamicSendMessageRequest, extractPureText } from '@/utils/onebot-utils'
 import { createMiddleware, type MessageSegmentSend } from 'aurorax'
 
@@ -6,18 +7,15 @@ const MASTER_ID = process.env.MASTER_ID
 
 export const delegateMsg = createMiddleware('delegateMsg', async (ctx, next) => {
   const event = ctx.event
-  if (event.post_type !== 'message') {
+  if (!allowChannel(event, { private: [MASTER_ID], groups: GROUP_IDS })) {
     return await next()
   }
-  const groupHit = event.message_type === 'group' && GROUP_IDS.includes(`${event.group_id}`)
-  const privateHit = event.message_type === 'private' && event.user_id === Number(MASTER_ID)
   const instruction = extractPureText(event.message).trim()
   const args = instruction.split(/\s+/)
   const delegateMsgHit = /^delegate/.test(instruction)
   const message = args[1]
   const isMessageValid = message && message.length > 0 && !message.startsWith('-')
-  const hit = (groupHit || privateHit) && delegateMsgHit && isMessageValid
-  if (!hit) {
+  if (!delegateMsgHit || !isMessageValid) {
     return await next()
   }
 

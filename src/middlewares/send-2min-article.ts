@@ -1,3 +1,4 @@
+import { isUser } from '@/extensions/gate'
 import { buildMorningReadMessage, fetchManifest } from '@/services/twomin-article'
 import { createDynamicSendMessageRequest, extractPureText } from '@/utils/onebot-utils'
 import { createMiddleware } from 'aurorax'
@@ -7,13 +8,7 @@ const MASTER_ID = env.MASTER_ID
 
 export const send2minArticleMw = createMiddleware('send2minArticleMw', async (ctx, next) => {
   const event = ctx.event
-  if (event.post_type !== 'message') {
-    return await next()
-  }
-  const isMaster = event.user_id === Number(MASTER_ID)
-  const instruction = extractPureText(event.message).trim()
-  const commandHit = instruction === '#2min'
-  if (!isMaster || !commandHit) {
+  if (!isUser(event, MASTER_ID) || extractPureText(event.message).trim() !== '#2min') {
     return await next()
   }
 

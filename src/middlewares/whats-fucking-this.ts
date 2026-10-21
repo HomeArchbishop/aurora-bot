@@ -1,3 +1,4 @@
+import { allowChannel } from '@/extensions/gate'
 import { LLM } from '@/extensions/llm'
 import { createDynamicSendMessageRequest, extractPureText } from '@/utils/onebot-utils'
 import { promisify } from '@/utils/promisify'
@@ -9,16 +10,13 @@ const GROUP_IDS = [process.env.MISC_GROUP_ID_KINDERGARTEN, process.env.MISC_GROU
 
 export const whatsFuckingThis = createMiddleware('whatsFuckingThis', async (ctx, next) => {
   const event = ctx.event
-  if (event.post_type !== 'message') {
+  if (!allowChannel(event, { private: [MASTER_ID], groups: GROUP_IDS })) {
     return await next()
   }
-  const privateHit = event.message_type === 'private' && event.user_id === Number(MASTER_ID)
-  const groupHit = event.message_type === 'group' && GROUP_IDS.includes(`${event.group_id}`)
   const instruction = extractPureText(event.message).trim()
   const commandHit = /^#what/.test(instruction)
   const replySeg = event.message.find(x => x.type === 'reply')
-  const hit = (privateHit || groupHit) && commandHit && replySeg
-  if (!hit) {
+  if (!commandHit || !replySeg) {
     return await next()
   }
 

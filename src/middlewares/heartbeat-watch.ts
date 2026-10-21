@@ -5,7 +5,10 @@ const HEARTBEAT_MISS_FACTOR = 2.5
 const DEFAULT_INTERVAL_MS = 5000
 
 let watchdogTimer: ReturnType<typeof setTimeout> | undefined
-let heartbeatLost = false
+/** meta 心跳包本身超时未到达 */
+let heartbeatTimedOut = false
+/** heartbeat.status.online === false */
+let qqOffline = false
 
 const notifySafe = (task: Promise<void>) => {
   task.catch((error) => {
@@ -20,21 +23,23 @@ const clearWatchdog = () => {
 }
 
 const armWatchdog = (intervalMs: number) => {
-  // 已处于失联态时不再挂表，避免重复提醒
-  if (heartbeatLost) return
+  // 已处于 meta 超时态时不再挂表，避免重复提醒
+  if (heartbeatTimedOut) return
 
   clearWatchdog()
   const timeoutMs = Math.max(intervalMs, 1000) * HEARTBEAT_MISS_FACTOR
   watchdogTimer = setTimeout(() => {
-    if (heartbeatLost) return
-    heartbeatLost = true
+    if (heartbeatTimedOut) return
+    heartbeatTimedOut = true
     clearWatchdog()
     notifySafe(notifyBark({
       title: 'aurora-bot',
-      body: `OneBot 与 QQ 心跳超时（>${Math.round(timeoutMs / 1000)}s 未收到 meta 心跳）`,
+      body: `OneBot 与 QQ：meta 心跳超时（>${Math.round(timeoutMs / 1000)}s 未收到）`,
     }))
   }, timeoutMs)
 }
+
+const isOnline = (status: Record<string, unknown>) => status.online === true
 
 export const heartbeatWatch = createMiddleware('heartbeatWatch', async (ctx, next) => {
   const event = ctx.event
@@ -43,11 +48,27 @@ export const heartbeatWatch = createMiddleware('heartbeatWatch', async (ctx, nex
       ? event.interval
       : DEFAULT_INTERVAL_MS
 
-    if (heartbeatLost) {
-      heartbeatLost = false
+    if (heartbeatTimedOut) {
+      heartbeatTimedOut = false
       notifySafe(notifyBark({
         title: 'aurora-bot',
-        body: 'OneBot 与 QQ 心跳已恢复',
+        body: 'OneBot 与 QQ：meta 心跳已恢复',
+      }))
+    }
+
+    if (!isOnline(event.status)) {
+      if (!qqOffline) {
+        qqOffline = true
+        notifySafe(notifyBark({
+          title: 'aurora-bot',
+          body: 'OneBot 与 QQ：账号 offline（heartbeat.status.online=false）',
+        }))
+      }
+    } else if (qqOffline) {
+      qqOffline = false
+      notifySafe(notifyBark({
+        title: 'aurora-bot',
+        body: 'OneBot 与 QQ：账号已 online',
       }))
     }
 

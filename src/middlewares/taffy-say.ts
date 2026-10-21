@@ -1,3 +1,4 @@
+import { allowChannel } from '@/extensions/gate'
 import { generateVoiceMinimax } from '@/services/voice-gen/minimax'
 import { createDynamicSendMessageRequest, extractPureText } from '@/utils/onebot-utils'
 import { createMiddleware } from 'aurorax'
@@ -9,11 +10,9 @@ const GROUP_IDS = [process.env.MISC_GROUP_ID_KINDERGARTEN, process.env.MISC_GROU
 
 export const taffySay = createMiddleware('taffySay', async (ctx, next) => {
   const event = ctx.event
-  if (event.post_type !== 'message') {
+  if (!allowChannel(event, { private: [MASTER_ID], groups: GROUP_IDS })) {
     return await next()
   }
-  const privateHit = event.message_type === 'private' && event.user_id === Number(MASTER_ID)
-  const groupHit = event.message_type === 'group' && GROUP_IDS.includes(`${event.group_id}`)
   const rawMessage = extractPureText(event.message).trim()
   const { _: [instruction, ...texts], 5: is528 } = minimist(rawMessage.split(' '), {
     boolean: ['5'],
@@ -21,9 +20,7 @@ export const taffySay = createMiddleware('taffySay', async (ctx, next) => {
       5: false,
     },
   })
-  const commandHit = instruction === '#taffy-say'
-  const hit = (privateHit || groupHit) && commandHit
-  if (!hit) {
+  if (instruction !== '#taffy-say') {
     return await next()
   }
 

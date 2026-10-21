@@ -1,3 +1,4 @@
+import { isPrivateFrom } from '@/extensions/gate'
 import { LLM } from '@/extensions/llm'
 import { createDynamicSendMessageRequest, extractPureText } from '@/utils/onebot-utils'
 import { promisify } from '@/utils/promisify'
@@ -8,15 +9,12 @@ const MASTER_ID = process.env.MASTER_ID
 
 export const correctWork = createMiddleware('correctWork', async (ctx, next) => {
   const event = ctx.event
-  if (event.post_type !== 'message') {
+  if (!isPrivateFrom(event, MASTER_ID)) {
     return await next()
   }
-  const privateHit = event.message_type === 'private' && event.user_id === Number(MASTER_ID)
   const instruction = extractPureText(event.message).trim()
-  const commandHit = /^#correct/.test(instruction)
   const replySeg = event.message.find(x => x.type === 'reply')
-  const hit = privateHit && commandHit && replySeg
-  if (!hit) {
+  if (!/^#correct/.test(instruction) || !replySeg) {
     return await next()
   }
 

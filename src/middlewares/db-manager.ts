@@ -1,8 +1,9 @@
 import { useDatabase } from '@/db'
+import { isUser } from '@/extensions/gate'
 import { createMiddleware } from 'aurorax'
 
 export const dbManager = createMiddleware('dbManager', async (ctx, next) => {
-  if (ctx.event.post_type !== 'message' || ctx.event.user_id !== Number(process.env.MASTER_ID)) {
+  if (!isUser(ctx.event, process.env.MASTER_ID)) {
     return await next()
   }
 
