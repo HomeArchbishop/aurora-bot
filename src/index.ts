@@ -10,7 +10,7 @@ import { createAppInfoMw } from './middlewares/app-info'
 import { checkKeyUsage } from './middlewares/check-key-usage'
 import { sendHi } from './webhooks/send-hi'
 import { ledger } from './webhooks/ledger'
-import { vnEvent } from './jobs/vn-event'
+// import { vnEvent } from './jobs/vn-event'
 import { vnReleaseEvent } from './middlewares/vn-release-event'
 import { taffyLive } from './jobs/taffy-live'
 
@@ -49,7 +49,7 @@ app
   .useMw(createAppInfoMw(app))
   /* applications */
   .useMw(checkKeyUsage)
-  .useJob(...vnEvent)
+  // .useJob(...vnEvent)
   .useMw(vnReleaseEvent)
   .useJob(...taffyLive)
   .useMw(dbManager)
